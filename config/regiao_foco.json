@@ -1,0 +1,60 @@
+{
+  "regiao_principal": "Parque do Carmo",
+  "regioes_secundarias": [
+    "Barra Funda",
+    "Alto de Pinheiros"
+  ],
+  "data_revisao": "2026-07-26",
+  "top_10_ranking": [
+    {
+      "distrito": "Parque do Carmo",
+      "mencoes_atracao": 13,
+      "mencoes_totais": 14
+    },
+    {
+      "distrito": "Barra Funda",
+      "mencoes_atracao": 8,
+      "mencoes_totais": 21
+    },
+    {
+      "distrito": "Alto de Pinheiros",
+      "mencoes_atracao": 7,
+      "mencoes_totais": 10
+    },
+    {
+      "distrito": "Morumbi",
+      "mencoes_atracao": 7,
+      "mencoes_totais": 26
+    },
+    {
+      "distrito": "Bom Retiro",
+      "mencoes_atracao": 6,
+      "mencoes_totais": 14
+    },
+    {
+      "distrito": "Santo Amaro",
+      "mencoes_atracao": 6,
+      "mencoes_totais": 9
+    },
+    {
+      "distrito": "Itaim Bibi",
+      "mencoes_atracao": 4,
+      "mencoes_totais": 26
+    },
+    {
+      "distrito": "Itaquera",
+      "mencoes_atracao": 4,
+      "mencoes_totais": 10
+    },
+    {
+      "distrito": "Brás",
+      "mencoes_atracao": 3,
+      "mencoes_totais": 42
+    },
+    {
+      "distrito": "Casa Verde",
+      "mencoes_atracao": 3,
+      "mencoes_totais": 9
+    }
+  ]
+}

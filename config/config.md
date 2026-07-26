@@ -2,18 +2,42 @@
 projeto: Morar SP
 perfil_instagram: morar_sp
 nome_exibicao: Dicas de Imóveis SP
-nicho: Mercado imobiliário (compra/venda, investimento em imóveis, dados e tendências)
-publico: Pessoas interessadas em comprar, investir ou entender o mercado imobiliário
+nicho: Mercado imobiliário (compra/venda, investimento em imóveis, dados e tendências) + vida e atrações de bairro em SP
+publico: ICP misto — ver seção "Público-alvo (ICP)"
 ---
 
 # Configuração do projeto
 
+## Público-alvo (ICP)
+
+- **50% moradores/visitantes frequentes de bairros específicos** — pessoas que já
+  moram perto ou frequentam a região pelas suas atrações (gastronomia, cultura,
+  eventos, lazer), potenciais candidatas a morar ali. Este é o pilar dominante:
+  o algoritmo deve entregar o conteúdo para quem já circula fisicamente pela
+  região retratada.
+- **25% investidor pessoa física** — quer diversificar patrimônio via imóveis/FIIs,
+  conteúdo mais analítico (dados, comparações, leitura de mercado).
+- **25% comprador de primeiro imóvel** — planejando a compra do imóvel próprio,
+  conteúdo prático (financiamento, documentação, dicas de compra).
+- **Fora do ICP por enquanto:** corretores/profissionais do setor.
+
+Posicionamento do perfil: **friendly e não comercial**. O objetivo agora é
+audiência e engajamento — monetização é decisão futura (ver seção
+"Monetização").
+
 ## Ângulo editorial
 
-Conteúdo que mistura:
-- **Compra/venda de imóveis** (corretores, imóvel próprio) — dicas práticas
-- **Investimento imobiliário** (FIIs, aluguel, valorização) — leitura de mercado
-- **Mercado imobiliário em geral** (dados, tendências, curiosidades)
+Três pilares:
+
+1. **Atrações e vida no bairro** (pilar dominante, ~50% do conteúdo) —
+   gastronomia, cultura, eventos, lazer e diferenciais da região em foco do
+   momento. A região não é fixa: é escolhida pela etapa 0 do pipeline
+   (`scripts/00_selecionar_regiao.py`) com base no nível de interesse atual
+   (menções recentes de atração/lifestyle no Google News), revisado a cada 15
+   dias. **70% do conteúdo deste pilar vai na região principal, 30% nas
+   secundárias** — ver `config/regiao_foco.json` para o estado atual.
+2. **Compra/venda de imóveis** (~25%) — corretores, imóvel próprio, dicas práticas.
+3. **Investimento imobiliário** (~25%) — FIIs, aluguel, valorização, leitura de mercado.
 
 Fora do escopo por enquanto: construção/reforma/decoração.
 
@@ -36,6 +60,13 @@ Ao processar uma pauta que cite empresa, marca ou imóvel específico:
 Também evitar, mesmo de forma genérica:
 - Promessas de rentabilidade específicas
 - Recomendação direta de compra/investimento (sempre framing informativo, não conselho financeiro)
+
+**Exceção — pilar de atrações e vida no bairro:** nomes de lugares públicos
+(parques, praças, festivais, ruas, equipamentos culturais) **não são
+despersonalizados** — citar "Festa das Cerejeiras no Parque do Carmo" é o
+próprio conteúdo, não uma promoção de marca. A regra de despersonalização
+vale para empresas/marcas privadas (construtoras, imobiliárias, restaurantes
+específicos como propaganda), não para atrações e espaços públicos do bairro.
 
 ## Frequência
 

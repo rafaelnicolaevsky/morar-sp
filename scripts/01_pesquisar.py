@@ -3,14 +3,22 @@ Etapa 1: Pesquisa de tendências e dados do mercado imobiliário.
 
 Responsável por:
 - Buscar notícias/dados recentes do setor (compra/venda, investimento, mercado geral)
+- Buscar atrações/lifestyle da região de foco do dia (definida pela etapa 0),
+  70% da região principal e 30% das secundárias
 - Salvar o resultado bruto em pesquisa/tendencias-YYYY-MM-DD.md
 """
 
 import re
+import sys
 import xml.etree.ElementTree as ET
 from datetime import date
+from pathlib import Path
 
 import requests
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from config.distritos_sp import NOMES_AMBIGUOS
+from scripts.utils.regiao import buscar_mencoes_google_news, carregar_regiao_foco, relevante_para_atracao
 
 USER_AGENT = "Mozilla/5.0 (compatible; MorarSP-Pesquisa/1.0)"
 TIMEOUT = 15
@@ -35,6 +43,10 @@ PALAVRAS_CHAVE_NICHO = [
 
 MAX_ITENS_POR_FEED = 5
 TAMANHO_MAX_RESUMO = 280
+
+JANELA_ATRACOES_DIAS = 10
+MAX_ITENS_REGIAO_PRINCIPAL = 7
+MAX_ITENS_POR_REGIAO_SECUNDARIA = 2
 
 
 RE_BOILERPLATE_WORDPRESS = re.compile(r"\s*The post .+ appeared first on .+?\.\s*$")
@@ -89,6 +101,45 @@ def _formatar_secao(categoria: str, itens: list[dict]) -> str:
     return "\n".join(linhas)
 
 
+def _buscar_atracoes_distrito(distrito: str, limite: int) -> list[dict]:
+    """Busca pautas de atração/lifestyle recentes de um distrito (título já filtrado por relevância)."""
+    query = f'"{distrito}" bairro São Paulo' if distrito in NOMES_AMBIGUOS else f'"{distrito}" São Paulo'
+    try:
+        itens = buscar_mencoes_google_news(query, JANELA_ATRACOES_DIAS)
+    except (requests.RequestException, ET.ParseError):
+        return []
+
+    relevantes = [item for item in itens if relevante_para_atracao(item["titulo"])]
+    formatados = [
+        {"titulo": _limpar_texto(item["titulo"]), "link": item["link"], "resumo": ""}
+        for item in relevantes[:limite]
+    ]
+    return formatados
+
+
+def _secao_regiao_foco() -> str:
+    try:
+        regiao_foco = carregar_regiao_foco()
+    except FileNotFoundError as erro:
+        return f"## Atrações e vida no bairro\n\n_{erro}_\n"
+
+    principal = regiao_foco["regiao_principal"]
+    secundarias = regiao_foco["regioes_secundarias"]
+
+    secoes = [_formatar_secao(
+        f"Atrações e vida no bairro — {principal} (região em foco, 70%)",
+        _buscar_atracoes_distrito(principal, MAX_ITENS_REGIAO_PRINCIPAL),
+    )]
+
+    for distrito in secundarias:
+        secoes.append(_formatar_secao(
+            f"Também no radar — {distrito} (30%)",
+            _buscar_atracoes_distrito(distrito, MAX_ITENS_POR_REGIAO_SECUNDARIA),
+        ))
+
+    return "\n".join(secoes)
+
+
 def pesquisar_tendencias() -> str:
     """
     Retorna um bloco de texto (markdown) com as pautas encontradas no dia,
@@ -96,6 +147,8 @@ def pesquisar_tendencias() -> str:
     """
     hoje = date.today().isoformat()
     secoes = [f"# Pesquisa de tendências — {hoje}\n"]
+
+    secoes.append(_secao_regiao_foco())
 
     for categoria, url in FEEDS_NICHO:
         try:

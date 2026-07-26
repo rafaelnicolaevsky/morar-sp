@@ -11,6 +11,7 @@ import subprocess
 import sys
 
 ETAPAS = [
+    "scripts/00_selecionar_regiao.py",
     "scripts/01_pesquisar.py",
     "scripts/02_gerar_copy.py",
     "scripts/03_gerar_visual.py",
