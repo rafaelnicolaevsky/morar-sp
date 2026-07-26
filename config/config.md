@@ -44,10 +44,11 @@ Fora do escopo por enquanto: construção/reforma/decoração.
 ## Formato de conteúdo
 
 - Carrossel para Instagram (feed)
-- Templates rotativos:
-  - "Você sabia" (curiosidade)
-  - Comparativo (ex: financiamento vs consórcio)
-  - Opinião de mercado (dado + leitura)
+- Templates rotativos (escolhidos conforme o pilar da pauta do dia):
+  - "Você sabia" (curiosidade) — pilares compra/venda e investimento
+  - Comparativo (ex: financiamento vs consórcio) — pilar compra/venda
+  - Opinião de mercado (dado + leitura) — pilar investimento
+  - "Descubra o bairro" (gancho de atração/evento → convite sutil a conhecer a região) — pilar atrações de bairro
 - Estilo visual: **variado** (mistura editorial/dados, humor/meme, informativo) — sem fórmula fixa única
 
 ## Regra de despersonalização (obrigatória)
