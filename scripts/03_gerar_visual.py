@@ -23,13 +23,13 @@ Identidade visual (aprovada em revisão de design, ver histórico do projeto):
     inteiro)
 - Margem de 80px em todo o canvas (1080x1350)
 
-Papel de cada card no carrossel:
-- Capa (1º slide): eyebrow + título (do copy.md) + corpo + rodapé (@handle)
-- Intermediários (2º ao penúltimo): sem eyebrow, sem rodapé; se o texto
-  abrir com **negrito**, esse trecho vira um mini-título (mesmo estilo do
-  h1 da capa) e o resto é corpo — senão, é só corpo (ver
-  _extrair_titulo_intermediario)
-- Último slide: eyebrow + corpo (sem título) + rodapé (@handle)
+Papel de cada card no carrossel (contrato de formato definido na etapa 2):
+- Capa (1º slide): eyebrow + título geral (do copy.md) + corpo + rodapé (@handle)
+- Intermediários (2º ao penúltimo): sem eyebrow, sem rodapé; mini-título
+  OBRIGATÓRIO (marcado com '### ' no copy.md) + corpo opcional
+- Último slide: eyebrow + mini-título OBRIGATÓRIO que é um CTA (curtir,
+  comentar, compartilhar ou salvar — pode ser pergunta) + corpo opcional
+  + rodapé (@handle)
 - Rodapé (@handle) aparece só na capa e no último slide, alinhado como o
   bloco de conteúdo (canto esquerdo na variante "esquerda", centralizado
   na variante "centro") — sem contador de slide
@@ -295,19 +295,27 @@ def _markdown_basico_para_html(texto: str) -> str:
     return texto.replace("\n", "<br>")
 
 
-def _extrair_titulo_intermediario(corpo: str) -> tuple[str, str]:
+def _extrair_titulo_e_corpo(texto_slide: str) -> tuple[str, str]:
     """
-    Cards intermediários não têm título próprio no copy.md, mas costumam
-    abrir com um trecho em **negrito** (ex.: "📄 **FIIs de papel**\nInvestem
-    em..."). Esse trecho vira o mini-título do card (mesmo estilo do h1 da
-    capa); o resto do texto vira corpo. Se não houver negrito na primeira
-    linha, o card fica só com corpo, como já acontecia antes.
+    A partir do 2º slide, o copy.md (etapa 2) traz um mini-título obrigatório
+    marcado com '### ' na primeira linha (no último slide, esse mini-título é
+    o CTA) e um corpo opcional nas linhas seguintes.
+
+    Fallback (copy.md gerado antes desse contrato, ou o modelo esquecendo o
+    '### '): se a primeira linha tiver **negrito**, vira o mini-título; senão
+    o texto inteiro fica só como corpo, sem título.
     """
-    primeira_linha, _, resto = corpo.partition("\n")
-    if not re.search(r"\*\*(.+?)\*\*", primeira_linha):
-        return "", corpo
-    titulo = re.sub(r"\*\*(.+?)\*\*", r"\1", primeira_linha).strip()
-    return titulo, resto.strip()
+    primeira_linha, _, resto = texto_slide.partition("\n")
+    primeira_linha = primeira_linha.strip()
+
+    if primeira_linha.startswith("### "):
+        return primeira_linha[4:].strip(), resto.strip()
+
+    if re.search(r"\*\*(.+?)\*\*", primeira_linha):
+        titulo = re.sub(r"\*\*(.+?)\*\*", r"\1", primeira_linha).strip()
+        return titulo, resto.strip()
+
+    return "", texto_slide
 
 
 def _montar_html_slide(tema: str, alinhamento: str, eyebrow: str, titulo: str, corpo: str,
@@ -315,7 +323,8 @@ def _montar_html_slide(tema: str, alinhamento: str, eyebrow: str, titulo: str, c
     bloco_eyebrow = f'<div class="eyebrow">{eyebrow}</div>' if mostrar_eyebrow else ""
     bloco_titulo = f"<h1>{titulo}</h1>" if titulo else ""
     corpo_html = _markdown_basico_para_html(corpo)
-    conteudo = f'<div class="conteudo">{bloco_eyebrow}{bloco_titulo}<p>{corpo_html}</p></div>'
+    bloco_corpo = f"<p>{corpo_html}</p>" if corpo.strip() else ""
+    conteudo = f'<div class="conteudo">{bloco_eyebrow}{bloco_titulo}{bloco_corpo}</div>'
 
     if alinhamento == "centro":
         corpo_slide = f'<div class="metade-inferior">{conteudo}</div>'
@@ -358,10 +367,8 @@ def gerar_carrossel(dados_copy: dict, estilo: str) -> list[str]:
 
             if eh_primeiro:
                 titulo_slide, corpo_slide = dados_copy["titulo"], texto_slide
-            elif eh_intermediario:
-                titulo_slide, corpo_slide = _extrair_titulo_intermediario(texto_slide)
-            else:  # ultimo
-                titulo_slide, corpo_slide = "", texto_slide
+            else:  # intermediario ou ultimo (CTA) — ambos tem mini-titulo obrigatorio, corpo opcional
+                titulo_slide, corpo_slide = _extrair_titulo_e_corpo(texto_slide)
 
             mostrar_eyebrow = not eh_intermediario
             mostrar_footer = eh_primeiro or eh_ultimo

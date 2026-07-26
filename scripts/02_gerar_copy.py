@@ -114,23 +114,39 @@ def _montar_prompt_sistema(template: str) -> str:
 Regras do projeto (config/config.md):
 {regras_projeto}
 
-Formato do post: carrossel de Instagram. A partir da pauta fornecida, gere:
-1. Um título curto (a ideia central do carrossel)
-2. Slides numerados, com texto curto (até ~280 caracteres cada), pensados
-   pra leitura rápida no feed — entre 4 e 7 slides
-3. Uma legenda (caption) do post: 1-2 frases + até 3 hashtags relevantes,
-   sem tom comercial
+Formato do post: carrossel de Instagram. A partir da pauta fornecida, gere
+entre 4 e 7 slides, com esta estrutura fixa:
+
+- **Slide 1 (capa)**: usa o título geral do carrossel (a ideia central) +
+  um texto de corpo (o gancho/contexto).
+- **Slides intermediários (do 2º ao penúltimo)**: cada um tem um
+  MINI-TÍTULO obrigatório (curto, poucas palavras, a ideia central daquele
+  slide) + um corpo OPCIONAL (detalhe/contexto — pode ficar só no
+  mini-título se não precisar de mais nada).
+- **Último slide**: mini-título é um CTA obrigatório — chame pra curtir,
+  comentar, compartilhar ou salvar o post. Pode vir como pergunta pra
+  encaixar o CTA de forma mais natural (ex.: "Já foi? Salva esse post pra
+  quando for" / "Mora por perto? Comenta aqui"). Corpo opcional.
 
 Template desta pauta: {TEMPLATE_INSTRUCOES[template]}
 
-Responda SOMENTE em markdown, neste formato exato:
-# [Título]
+Além disso, gere uma legenda (caption) do post: 1-2 frases + até 3 hashtags
+relevantes, sem tom comercial.
+
+Responda SOMENTE em markdown, neste formato exato (### só aparece do
+slide 2 em diante — o slide 1 não usa, ele já tem o título geral do "#"):
+# [Título geral do carrossel]
 
 ## Slide 1
-[texto]
+[corpo do slide 1]
 
 ## Slide 2
-[texto]
+### [mini-título do slide 2]
+[corpo opcional]
+
+## Slide N (último slide)
+### [CTA do último slide]
+[corpo opcional]
 
 ## Legenda
 [texto da legenda]

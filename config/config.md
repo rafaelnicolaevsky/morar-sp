@@ -55,6 +55,10 @@ Fora do escopo por enquanto: construção/reforma/decoração.
 
 - **Nunca usar travessão (—)** em nenhum texto gerado (título, slides ou
   legenda). Reescrever a frase ou usar vírgula/ponto no lugar.
+- **Estrutura do carrossel**: capa (título geral + corpo) → slides
+  intermediários (mini-título obrigatório + corpo opcional) → último slide
+  (CTA obrigatório como mini-título — curtir, comentar, compartilhar ou
+  salvar, pode ser em forma de pergunta — + corpo opcional).
 
 ## Regra de despersonalização (obrigatória)
 
