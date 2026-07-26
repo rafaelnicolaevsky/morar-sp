@@ -1,0 +1,15 @@
+# Segredos - nunca versionar
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Logs e conteúdo gerado (opcional manter fora do git)
+logs/*.md
+conteudo/
+
+# Sistema
+.DS_Store
