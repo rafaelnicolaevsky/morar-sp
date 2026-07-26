@@ -9,16 +9,17 @@ publicação via Instagram Graph API.
 ## Fluxo
 
 ```
-01_pesquisar.py → 02_gerar_copy.py → 03_gerar_visual.py → 04_publicar.py
+00_selecionar_regiao.py → 01_pesquisar.py → 02_gerar_copy.py → 03_gerar_visual.py → 04_publicar.py
 ```
 
 Orquestrado por `run_diario.py`.
 
 ## Configuração
 
-1. Copie `.env.example` para `.env` e preencha o token de acesso
+1. Copie `.env.example` para `.env` e preencha os tokens/chaves (Instagram e `ANTHROPIC_API_KEY`)
 2. Instale dependências: `pip install -r requirements.txt`
-3. Regras de conteúdo e tom estão em `config/config.md`
+3. Instale o navegador do Playwright (usado pela etapa 3 pra renderizar os slides): `playwright install chromium`
+4. Regras de conteúdo e tom estão em `config/config.md`
 
 ## Estrutura
 

@@ -51,6 +51,11 @@ Fora do escopo por enquanto: construção/reforma/decoração.
   - "Descubra o bairro" (gancho de atração/evento → convite sutil a conhecer a região) — pilar atrações de bairro
 - Estilo visual: **variado** (mistura editorial/dados, humor/meme, informativo) — sem fórmula fixa única
 
+## Regras de redação (obrigatórias)
+
+- **Nunca usar travessão (—)** em nenhum texto gerado (título, slides ou
+  legenda). Reescrever a frase ou usar vírgula/ponto no lugar.
+
 ## Regra de despersonalização (obrigatória)
 
 Ao processar uma pauta que cite empresa, marca ou imóvel específico:
