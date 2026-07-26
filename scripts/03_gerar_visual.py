@@ -22,6 +22,17 @@ Identidade visual (aprovada em revisão de design, ver histórico do projeto):
     posicionado na metade inferior do layout (não centralizado no canvas
     inteiro)
 - Margem de 80px em todo o canvas (1080x1350)
+
+Papel de cada card no carrossel:
+- Capa (1º slide): eyebrow + título (do copy.md) + corpo + rodapé (@handle)
+- Intermediários (2º ao penúltimo): sem eyebrow, sem rodapé; se o texto
+  abrir com **negrito**, esse trecho vira um mini-título (mesmo estilo do
+  h1 da capa) e o resto é corpo — senão, é só corpo (ver
+  _extrair_titulo_intermediario)
+- Último slide: eyebrow + corpo (sem título) + rodapé (@handle)
+- Rodapé (@handle) aparece só na capa e no último slide, alinhado como o
+  bloco de conteúdo (canto esquerdo na variante "esquerda", centralizado
+  na variante "centro") — sem contador de slide
 """
 
 import os
@@ -128,14 +139,14 @@ p {
   bottom: 80px;
   left: 80px;
   right: 80px;
-  display: flex;
-  justify-content: space-between;
   font-family: 'Stack Sans Text', sans-serif;
   font-weight: 400;
   font-size: 24px;
   color: var(--dark-gray);
   opacity: 0.6;
 }
+.footer.alinhado-esquerda { text-align: left; }
+.footer.alinhado-centro { text-align: center; }
 
 .tema-verde .eyebrow { background: var(--green-dark); }
 .tema-azul .eyebrow { background: var(--blue-dark); }
@@ -284,16 +295,34 @@ def _markdown_basico_para_html(texto: str) -> str:
     return texto.replace("\n", "<br>")
 
 
+def _extrair_titulo_intermediario(corpo: str) -> tuple[str, str]:
+    """
+    Cards intermediários não têm título próprio no copy.md, mas costumam
+    abrir com um trecho em **negrito** (ex.: "📄 **FIIs de papel**\nInvestem
+    em..."). Esse trecho vira o mini-título do card (mesmo estilo do h1 da
+    capa); o resto do texto vira corpo. Se não houver negrito na primeira
+    linha, o card fica só com corpo, como já acontecia antes.
+    """
+    primeira_linha, _, resto = corpo.partition("\n")
+    if not re.search(r"\*\*(.+?)\*\*", primeira_linha):
+        return "", corpo
+    titulo = re.sub(r"\*\*(.+?)\*\*", r"\1", primeira_linha).strip()
+    return titulo, resto.strip()
+
+
 def _montar_html_slide(tema: str, alinhamento: str, eyebrow: str, titulo: str, corpo: str,
-                        indice: int, total: int) -> str:
+                        mostrar_eyebrow: bool, mostrar_footer: bool) -> str:
+    bloco_eyebrow = f'<div class="eyebrow">{eyebrow}</div>' if mostrar_eyebrow else ""
     bloco_titulo = f"<h1>{titulo}</h1>" if titulo else ""
     corpo_html = _markdown_basico_para_html(corpo)
-    conteudo = f'<div class="conteudo"><div class="eyebrow">{eyebrow}</div>{bloco_titulo}<p>{corpo_html}</p></div>'
+    conteudo = f'<div class="conteudo">{bloco_eyebrow}{bloco_titulo}<p>{corpo_html}</p></div>'
 
     if alinhamento == "centro":
         corpo_slide = f'<div class="metade-inferior">{conteudo}</div>'
     else:
         corpo_slide = conteudo
+
+    footer = f'<div class="footer alinhado-{alinhamento}">@morar_sp</div>' if mostrar_footer else ""
 
     return f"""<!doctype html>
 <html lang="pt-BR">
@@ -301,7 +330,7 @@ def _montar_html_slide(tema: str, alinhamento: str, eyebrow: str, titulo: str, c
 <body>
 <div class="slide {tema} alinhado-{alinhamento}">
   {corpo_slide}
-  <div class="footer"><span>@morar_sp</span><span>{indice} / {total}</span></div>
+  {footer}
 </div>
 </body>
 </html>"""
@@ -322,9 +351,25 @@ def gerar_carrossel(dados_copy: dict, estilo: str) -> list[str]:
         navegador = p.chromium.launch()
         pagina = navegador.new_page(viewport={"width": LARGURA_CANVAS, "height": ALTURA_CANVAS})
 
-        for i, corpo_slide in enumerate(dados_copy["slides"], start=1):
-            titulo_slide = dados_copy["titulo"] if i == 1 else ""
-            html = _montar_html_slide(tema, estilo, eyebrow, titulo_slide, corpo_slide, i, total)
+        for i, texto_slide in enumerate(dados_copy["slides"], start=1):
+            eh_primeiro = i == 1
+            eh_ultimo = i == total
+            eh_intermediario = not eh_primeiro and not eh_ultimo
+
+            if eh_primeiro:
+                titulo_slide, corpo_slide = dados_copy["titulo"], texto_slide
+            elif eh_intermediario:
+                titulo_slide, corpo_slide = _extrair_titulo_intermediario(texto_slide)
+            else:  # ultimo
+                titulo_slide, corpo_slide = "", texto_slide
+
+            mostrar_eyebrow = not eh_intermediario
+            mostrar_footer = eh_primeiro or eh_ultimo
+
+            html = _montar_html_slide(
+                tema, estilo, eyebrow, titulo_slide, corpo_slide,
+                mostrar_eyebrow, mostrar_footer,
+            )
             pagina.set_content(html)
             pagina.wait_for_timeout(300)  # tempo pra fonte do Google Fonts carregar
 
