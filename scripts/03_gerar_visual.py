@@ -434,6 +434,12 @@ def gerar_carrossel(dados_copy: dict, estilo: str) -> list[str]:
     pasta = f"conteudo/posts-{hoje}/carrossel"
     os.makedirs(pasta, exist_ok=True)
 
+    # Limpa slides de uma geração anterior no mesmo dia (ex.: se o post tinha
+    # 6 slides antes e agora tem 5, o slide-6.png antigo ficaria órfão na
+    # pasta e seria publicado por engano junto com o carrossel novo).
+    for arquivo_antigo in Path(pasta).glob("slide-*.png"):
+        arquivo_antigo.unlink()
+
     caminhos = []
     with sync_playwright() as p:
         navegador = p.chromium.launch()
