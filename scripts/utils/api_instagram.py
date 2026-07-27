@@ -1,5 +1,7 @@
 """
-Funções reutilizáveis para chamadas à Instagram Graph API.
+Funções reutilizáveis para chamadas à Instagram API (login direto do
+Instagram, não Facebook Login — por isso o host é graph.instagram.com e o
+ID de conta é o Instagram-scoped User ID, não um ID de Página do Facebook).
 
 Usa variáveis de ambiente (.env) para credenciais — nunca hardcode o token.
 
@@ -21,7 +23,7 @@ load_dotenv()
 
 ACCESS_TOKEN = os.getenv("INSTAGRAM_ACCESS_TOKEN")
 ACCOUNT_ID = os.getenv("INSTAGRAM_ACCOUNT_ID")
-GRAPH_API_BASE = "https://graph.facebook.com/v21.0"
+GRAPH_API_BASE = "https://graph.instagram.com/v21.0"
 TIMEOUT = 30
 
 

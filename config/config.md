@@ -94,10 +94,12 @@ específicos como propaganda), não para atrações e espaços públicos do bair
 - Pesquisa de tendências: **diária**
 - Publicação: a definir (sugestão inicial: 1 post/dia)
 
-## Publicação (Instagram Graph API)
+## Publicação (Instagram API — login direto do Instagram)
 
 - App Meta: "Morar SP"
-- Conta Instagram: morar_sp (ID: 17841438460511613)
+- Conta Instagram: morar_sp (Instagram-scoped User ID: 25952830001081792)
+- Host da API: graph.instagram.com (não graph.facebook.com — não é fluxo
+  de Facebook Login, é "API do Instagram com login direto")
 - Nome do app Instagram: Morar SP-IG (ID: 1296129422598897)
 - Status do app: Em desenvolvimento (conta cadastrada como testadora)
 - Permissões ativas: instagram_business_basic, instagram_business_manage_comments,
