@@ -54,7 +54,8 @@ Fora do escopo por enquanto: construção/reforma/decoração.
 
 ## Formato de conteúdo
 
-- Carrossel para Instagram (feed)
+- Formato do post sorteado a cada dia: **50% carrossel / 50% imagem única**
+  (imagem única usa só a capa: título geral + corpo do slide 1)
 - Templates rotativos (escolhidos conforme o pilar da pauta do dia):
   - "Você sabia" (curiosidade) — pilares compra/venda e investimento
   - Comparativo (ex: financiamento vs consórcio) — pilar compra/venda
