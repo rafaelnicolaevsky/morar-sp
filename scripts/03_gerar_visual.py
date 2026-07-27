@@ -136,11 +136,8 @@ body { font-family: 'Stack Sans Text', sans-serif; }
 .slide.tema-verde.tem-foto.overlay-cheio::before { background: rgba(108, 138, 31, 0.85); }
 .slide.tema-azul.tem-foto.overlay-cheio::before { background: rgba(59, 118, 192, 0.85); }
 .slide.tema-laranja.tem-foto.overlay-cheio::before { background: rgba(232, 97, 31, 0.85); }
-.slide.tem-foto.overlay-cheio .conteudo,
-.slide.tem-foto.overlay-cheio .metade-inferior {
-  position: relative;
-  z-index: 1;
-}
+.slide.tem-foto.overlay-cheio .conteudo { position: relative; z-index: 1; }
+.slide.tem-foto.overlay-cheio .metade-inferior { z-index: 1; }
 .slide.tem-foto.overlay-cheio .footer { z-index: 1; }
 
 /* Modo "gradiente": preto em gradiente (fixo em 75% embaixo, nunca 100%,
@@ -153,11 +150,8 @@ body { font-family: 'Stack Sans Text', sans-serif; }
   background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0) 100%);
   z-index: 0;
 }
-.slide.tem-foto.overlay-gradiente .conteudo,
-.slide.tem-foto.overlay-gradiente .metade-inferior {
-  position: relative;
-  z-index: 1;
-}
+.slide.tem-foto.overlay-gradiente .conteudo { position: relative; z-index: 1; }
+.slide.tem-foto.overlay-gradiente .metade-inferior { z-index: 1; }
 .slide.tem-foto.overlay-gradiente .footer { z-index: 1; }
 
 /* No modo gradiente, desloca o bloco pra baixo na variante "esquerda" (a
