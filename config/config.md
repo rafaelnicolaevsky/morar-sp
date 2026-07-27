@@ -62,6 +62,17 @@ Fora do escopo por enquanto: construção/reforma/decoração.
   - Opinião de mercado (dado + leitura) — pilar investimento
   - "Descubra o bairro" (gancho de atração/evento → convite sutil a conhecer a região) — pilar atrações de bairro
 - Estilo visual: **variado** (mistura editorial/dados, humor/meme, informativo) — sem fórmula fixa única
+- **Legenda (caption) com framework de copywriting rotativo** (não é só
+  "1-2 frases", precisa ter substância real — ver `FRAMEWORK_LEGENDA_INSTRUCOES`
+  em `scripts/02_gerar_copy.py`):
+  - PAS (Problema-Agitação-Solução) — base: aversão à perda
+  - Dado → Mecanismo → Relevância — base: necessidade de fechamento cognitivo;
+    obrigatório quando o post gira em torno de um dado/tendência (explicar o
+    PORQUÊ, nunca só repetir o fato)
+  - Loop de Curiosidade Fechado — base: efeito Zeigarnik; a legenda sempre
+    responde por completo o que abriu, nunca deixa a resposta subentendida
+  - Antes-Depois-Ponte (BAB) — base: contraste/ancoragem
+  - Reciprocidade — base: princípio de Cialdini; entrega valor real antes do CTA
 
 ## Regras de redação (obrigatórias)
 

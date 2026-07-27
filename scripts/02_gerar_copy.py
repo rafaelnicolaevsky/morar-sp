@@ -58,6 +58,51 @@ TEMPLATE_INSTRUCOES = {
 
 TEMPLATES = ["voce_sabia", "comparativo", "opiniao_de_mercado", "descubra_bairro"]
 
+# Frameworks de copywriting pra legenda (caption) — cada um baseado em
+# retórica/heurística de decisão validada, não fórmula genérica. Objetivo:
+# se o CTA pede pra ler a legenda, a legenda precisa entregar conteúdo de
+# verdade, não um teaser vazio.
+FRAMEWORKS_POR_PILAR = {
+    "atracao": ["curiosidade_fechada", "antes_depois_ponte", "reciprocidade"],
+    "compra_venda": ["dado_mecanismo_relevancia", "pas", "reciprocidade"],
+    "investimento": ["dado_mecanismo_relevancia", "pas"],
+}
+FRAMEWORK_LEGENDA_INSTRUCOES = {
+    "pas": (
+        "Framework PAS — Problema, Agitação, Solução (base: aversão à perda). "
+        "1) Nomeie o problema ou dado central do post. 2) Agitação: explique "
+        "por que isso importa de verdade — o mecanismo por trás, não só o "
+        "fato. 3) Feche com a implicação prática pro leitor. Não invente "
+        "solução mágica, o objetivo é explicar, não vender."
+    ),
+    "dado_mecanismo_relevancia": (
+        "Framework Dado → Mecanismo → Relevância (base: necessidade de "
+        "fechamento cognitivo). 1) Retome o dado/gancho central do post. "
+        "2) Explique O PORQUÊ por trás dele — a causa, o mecanismo real "
+        "(isso é obrigatório: nunca deixe o 'porquê' apenas insinuado ou "
+        "subentendido). 3) Traduza pra relevância prática de quem lê."
+    ),
+    "curiosidade_fechada": (
+        "Framework Loop de Curiosidade Fechado (base: efeito Zeigarnik / "
+        "curiosity gap). Abra com uma pergunta ou lacuna de informação, mas "
+        "RESPONDA por completo dentro da própria legenda — nunca deixe a "
+        "resposta dependendo de reler os slides ou ficando só implícita."
+    ),
+    "antes_depois_ponte": (
+        "Framework Antes-Depois-Ponte / BAB (base: contraste e ancoragem). "
+        "1) Antes: como a região/situação era vista ou o que parecia. "
+        "2) Depois: o que mudou, o que foi descoberto ou o que está "
+        "rolando agora. 3) Ponte: o que isso significa pra quem lê (ex.: "
+        "quem mora perto, quem pensa em se mudar)."
+    ),
+    "reciprocidade": (
+        "Framework Reciprocidade (base: princípio de Cialdini). Entregue um "
+        "insight ou dica de valor real ANTES do CTA — quem ler precisa sair "
+        "sabendo algo útil mesmo sem interagir. O CTA vem como continuação "
+        "natural do valor entregue, nunca como pedido isolado e vazio."
+    ),
+}
+
 
 def ler_pesquisa_do_dia() -> str:
     """Lê o arquivo de pesquisa gerado na etapa 1."""
@@ -105,7 +150,12 @@ def selecionar_pilar_e_template(secoes: dict[str, str]) -> tuple[str, str]:
     return pilar, template
 
 
-def _montar_prompt_sistema(template: str) -> str:
+def selecionar_framework_legenda(pilar: str) -> str:
+    """Sorteia o framework de copywriting da legenda entre os que fazem sentido pro pilar."""
+    return random.choice(FRAMEWORKS_POR_PILAR[pilar])
+
+
+def _montar_prompt_sistema(template: str, framework_legenda: str) -> str:
     with open("config/config.md", "r", encoding="utf-8") as f:
         regras_projeto = f.read()
 
@@ -130,8 +180,18 @@ entre 4 e 7 slides, com esta estrutura fixa:
 
 Template desta pauta: {TEMPLATE_INSTRUCOES[template]}
 
-Além disso, gere uma legenda (caption) do post: 1-2 frases + até 3 hashtags
-relevantes, sem tom comercial.
+Além disso, gere uma legenda (caption) do post — ela precisa ser rica em
+conteúdo de verdade, não um teaser vazio: se o CTA do post pede pra ler a
+legenda, salvar ou comentar, quem ler precisa sair sabendo algo que os
+slides sozinhos não cobriram por completo. Regra especialmente importante
+quando o post explica um dado/tendência (ex.: "aluguel subiu X%"): a
+legenda é o lugar de explicar o PORQUÊ por trás do dado, não só repetir o
+fato. Estruture a legenda usando este framework:
+
+{FRAMEWORK_LEGENDA_INSTRUCOES[framework_legenda]}
+
+Legenda: 3-5 frases (não 1-2 — precisa ter substância) + até 3 hashtags
+relevantes no final, sem tom comercial.
 
 Por fim, gere 3-5 palavras-chave EM INGLÊS pra buscar uma foto de fundo no
 Unsplash que combine com o ASSUNTO ESPECÍFICO do post (não um termo genérico
@@ -183,13 +243,13 @@ def _remover_preambulo(texto: str) -> str:
     return texto[match.start():] if match else texto
 
 
-def gerar_copy(pauta: str, template: str) -> str:
-    """Gera o texto/copy do post com base na pauta e no template escolhido."""
+def gerar_copy(pauta: str, template: str, framework_legenda: str) -> str:
+    """Gera o texto/copy do post com base na pauta, no template e no framework de legenda escolhidos."""
     client = anthropic.Anthropic()
     resposta = client.messages.create(
         model=MODELO,
         max_tokens=2000,
-        system=_montar_prompt_sistema(template),
+        system=_montar_prompt_sistema(template, framework_legenda),
         messages=[{"role": "user", "content": f"Pauta de hoje:\n\n{pauta}"}],
     )
     return _remover_preambulo(_extrair_texto(resposta))
@@ -223,12 +283,12 @@ def despersonalizar(texto: str) -> str:
     return _remover_preambulo(_extrair_texto(resposta))
 
 
-def salvar_copy(texto: str, pilar: str, template: str) -> str:
+def salvar_copy(texto: str, pilar: str, template: str, framework_legenda: str) -> str:
     hoje = date.today().isoformat()
     pasta = f"conteudo/posts-{hoje}"
     os.makedirs(pasta, exist_ok=True)
     caminho = f"{pasta}/copy.md"
-    cabecalho = f"<!-- pilar: {pilar} | template: {template} -->\n\n"
+    cabecalho = f"<!-- pilar: {pilar} | template: {template} | framework_legenda: {framework_legenda} -->\n\n"
     with open(caminho, "w", encoding="utf-8") as f:
         f.write(cabecalho + texto)
     return caminho
@@ -238,9 +298,10 @@ if __name__ == "__main__":
     pesquisa_do_dia = ler_pesquisa_do_dia()
     secoes = _dividir_por_pilar(pesquisa_do_dia)
     pilar, template = selecionar_pilar_e_template(secoes)
-    print(f"Pilar selecionado: {pilar} | Template: {template}")
+    framework_legenda = selecionar_framework_legenda(pilar)
+    print(f"Pilar selecionado: {pilar} | Template: {template} | Framework da legenda: {framework_legenda}")
 
-    copy_bruto = gerar_copy(secoes[pilar], template=template)
+    copy_bruto = gerar_copy(secoes[pilar], template=template, framework_legenda=framework_legenda)
     copy_final = despersonalizar(copy_bruto)
-    caminho = salvar_copy(copy_final, pilar, template)
+    caminho = salvar_copy(copy_final, pilar, template, framework_legenda)
     print(f"Copy salvo em: {caminho}")
