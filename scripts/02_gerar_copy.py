@@ -150,12 +150,7 @@ def selecionar_pilar_e_template(secoes: dict[str, str]) -> tuple[str, str]:
     return pilar, template
 
 
-def selecionar_framework_legenda(pilar: str) -> str:
-    """Sorteia o framework de copywriting da legenda entre os que fazem sentido pro pilar."""
-    return random.choice(FRAMEWORKS_POR_PILAR[pilar])
-
-
-def _montar_prompt_sistema(template: str, framework_legenda: str) -> str:
+def _montar_prompt_sistema(template: str, pilar: str) -> str:
     with open("config/config.md", "r", encoding="utf-8") as f:
         regras_projeto = f.read()
 
@@ -186,9 +181,14 @@ legenda, salvar ou comentar, quem ler precisa sair sabendo algo que os
 slides sozinhos não cobriram por completo. Regra especialmente importante
 quando o post explica um dado/tendência (ex.: "aluguel subiu X%"): a
 legenda é o lugar de explicar o PORQUÊ por trás do dado, não só repetir o
-fato. Estruture a legenda usando este framework:
+fato.
 
-{FRAMEWORK_LEGENDA_INSTRUCOES[framework_legenda]}
+Escolha, entre os frameworks de copywriting abaixo, qual se encaixa MELHOR
+na pauta específica de hoje (não escolha por padrão/hábito — analise o que
+a pauta realmente pede: tem um dado a explicar? uma lacuna de curiosidade
+pra fechar? um contraste antes/depois? algo pra dar de valor antes do CTA?):
+
+{chr(10).join(f"- **{nome}**: {instrucao}" for nome, instrucao in FRAMEWORK_LEGENDA_INSTRUCOES.items() if nome in FRAMEWORKS_POR_PILAR[pilar])}
 
 Legenda: 3-5 frases (não 1-2 — precisa ter substância) + até 3 hashtags
 relevantes no final, sem tom comercial.
@@ -218,6 +218,9 @@ slide 2 em diante — o slide 1 não usa, ele já tem o título geral do "#"):
 ## Legenda
 [texto da legenda]
 
+## Framework
+[nome do framework escolhido pra legenda, exatamente como listado acima — ex: dado_mecanismo_relevancia]
+
 ## Imagem
 [palavras-chave em inglês pra busca de foto, ex: "cherry blossom park festival"]
 """
@@ -243,16 +246,26 @@ def _remover_preambulo(texto: str) -> str:
     return texto[match.start():] if match else texto
 
 
-def gerar_copy(pauta: str, template: str, framework_legenda: str) -> str:
-    """Gera o texto/copy do post com base na pauta, no template e no framework de legenda escolhidos."""
+def gerar_copy(pauta: str, template: str, pilar: str) -> str:
+    """Gera o texto/copy do post com base na pauta e no template; o modelo escolhe o framework da legenda."""
     client = anthropic.Anthropic()
     resposta = client.messages.create(
         model=MODELO,
-        max_tokens=2000,
-        system=_montar_prompt_sistema(template, framework_legenda),
+        max_tokens=3000,
+        system=_montar_prompt_sistema(template, pilar),
         messages=[{"role": "user", "content": f"Pauta de hoje:\n\n{pauta}"}],
     )
     return _remover_preambulo(_extrair_texto(resposta))
+
+
+def _extrair_framework_escolhido(texto: str) -> tuple[str, str]:
+    """Extrai a seção '## Framework' do texto gerado. Retorna (framework, texto_sem_a_secao)."""
+    match = re.search(r"(?m)^## Framework\s*\n(.+?)\s*(?=\n##|\Z)", texto, re.DOTALL)
+    if not match:
+        return "não identificado", texto
+    framework = match.group(1).strip()
+    texto_limpo = texto[:match.start()] + texto[match.end():]
+    return framework, re.sub(r"\n{3,}", "\n\n", texto_limpo)
 
 
 def despersonalizar(texto: str) -> str:
@@ -276,7 +289,7 @@ def despersonalizar(texto: str) -> str:
     )
     resposta = client.messages.create(
         model=MODELO,
-        max_tokens=2000,
+        max_tokens=3000,
         system=system,
         messages=[{"role": "user", "content": texto}],
     )
@@ -298,10 +311,12 @@ if __name__ == "__main__":
     pesquisa_do_dia = ler_pesquisa_do_dia()
     secoes = _dividir_por_pilar(pesquisa_do_dia)
     pilar, template = selecionar_pilar_e_template(secoes)
-    framework_legenda = selecionar_framework_legenda(pilar)
-    print(f"Pilar selecionado: {pilar} | Template: {template} | Framework da legenda: {framework_legenda}")
+    print(f"Pilar selecionado: {pilar} | Template: {template}")
 
-    copy_bruto = gerar_copy(secoes[pilar], template=template, framework_legenda=framework_legenda)
-    copy_final = despersonalizar(copy_bruto)
+    copy_bruto = gerar_copy(secoes[pilar], template=template, pilar=pilar)
+    copy_revisado = despersonalizar(copy_bruto)
+    framework_legenda, copy_final = _extrair_framework_escolhido(copy_revisado)
+    print(f"Framework da legenda escolhido pelo modelo: {framework_legenda}")
+
     caminho = salvar_copy(copy_final, pilar, template, framework_legenda)
     print(f"Copy salvo em: {caminho}")
