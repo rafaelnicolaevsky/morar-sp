@@ -78,6 +78,15 @@ Fora do escopo por enquanto: construção/reforma/decoração.
 
 - **Nunca usar travessão (—)** em nenhum texto gerado (título, slides ou
   legenda). Reescrever a frase ou usar vírgula/ponto no lugar.
+- **Contexto geográfico obrigatório**: todo post precisa citar a cidade de
+  São Paulo ou um bairro/região específica em algum ponto do carrossel ou
+  da legenda. Isso é o que permite o algoritmo do Instagram entregar o
+  conteúdo pra audiência certa (moradores/interessados na região). Se a
+  pauta original vier de outra cidade (ex.: um dado sobre o Rio de
+  Janeiro), não basta especular "isso pode chegar a SP também" de forma
+  vaga — busque ou construa uma conexão concreta com São Paulo (um bairro,
+  uma região, um dado local equivalente) antes de fechar o post. Pauta sem
+  nenhuma conexão real com SP não deve virar post.
 - **Estrutura do carrossel**: capa (título geral + corpo) → slides
   intermediários (mini-título obrigatório + corpo opcional) → último slide
   (CTA obrigatório como mini-título — curtir, comentar, compartilhar ou
