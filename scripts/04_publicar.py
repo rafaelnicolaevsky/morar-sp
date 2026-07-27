@@ -20,6 +20,7 @@ from scripts.utils.api_instagram import (
     criar_container_carrossel,
     criar_container_imagem,
     criar_container_imagem_unica,
+    esperar_container_pronto,
     publicar_container,
 )
 from scripts.utils.hospedagem_midia import publicar_imagens_no_repo_midia
@@ -69,6 +70,9 @@ if __name__ == "__main__":
         container_ids = [criar_container_imagem(url) for url in imagens_urls]
         print("Criando container do carrossel...")
         container_pai = criar_container_carrossel(container_ids, legenda)
+
+    print("Aguardando processamento da mídia...")
+    esperar_container_pronto(container_pai)
 
     print("Publicando...")
     resultado = publicar_container(container_pai)
