@@ -1,11 +1,11 @@
 """
-Etapa 4: Publicação do carrossel no Instagram via Graph API.
+Etapa 4: Publicação do post no Instagram via API.
 
 Responsável por:
-- Ler a legenda (etapa 2) e as imagens do carrossel (etapa 3) do dia
-- Hospedar as imagens no repo público morar-sp-midia (a Graph API exige
-  image_url público, não aceita upload de arquivo local) — ver
-  utils/hospedagem_midia.py
+- Ler a legenda (etapa 2) e as imagens (etapa 3) do dia — 1 imagem = post de
+  imagem única, mais de 1 = carrossel (a etapa 3 decide o formato do dia)
+- Hospedar as imagens no repo público morar-sp-midia (a API exige image_url
+  público, não aceita upload de arquivo local) — ver utils/hospedagem_midia.py
 - Publicar via utils/api_instagram.py
 - Registrar o resultado em logs/publicacoes.md
 """
@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from scripts.utils.api_instagram import (
     criar_container_carrossel,
     criar_container_imagem,
+    criar_container_imagem_unica,
     publicar_container,
 )
 from scripts.utils.hospedagem_midia import publicar_imagens_no_repo_midia
@@ -57,14 +58,17 @@ if __name__ == "__main__":
     legenda = ler_legenda_do_dia()
     caminhos_imagens = listar_imagens_do_dia()
 
-    print(f"Hospedando {len(caminhos_imagens)} imagens no repo morar-sp-midia...")
+    print(f"Hospedando {len(caminhos_imagens)} imagem(ns) no repo morar-sp-midia...")
     imagens_urls = publicar_imagens_no_repo_midia(caminhos_imagens)
 
-    print("Criando containers de mídia...")
-    container_ids = [criar_container_imagem(url) for url in imagens_urls]
-
-    print("Criando container do carrossel...")
-    container_pai = criar_container_carrossel(container_ids, legenda)
+    if len(imagens_urls) == 1:
+        print("Post de imagem única — criando container...")
+        container_pai = criar_container_imagem_unica(imagens_urls[0], legenda)
+    else:
+        print("Criando containers de mídia do carrossel...")
+        container_ids = [criar_container_imagem(url) for url in imagens_urls]
+        print("Criando container do carrossel...")
+        container_pai = criar_container_carrossel(container_ids, legenda)
 
     print("Publicando...")
     resultado = publicar_container(container_pai)

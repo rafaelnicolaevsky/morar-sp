@@ -49,6 +49,16 @@ def criar_container_imagem(image_url: str) -> str:
     return corpo["id"]
 
 
+def criar_container_imagem_unica(image_url: str, legenda: str) -> str:
+    """Cria o container de um post de imagem única (não é item de carrossel). Retorna o container ID."""
+    corpo = _post(f"{ACCOUNT_ID}/media", {
+        "image_url": image_url,
+        "caption": legenda,
+        "access_token": ACCESS_TOKEN,
+    })
+    return corpo["id"]
+
+
 def criar_container_carrossel(container_ids: list[str], legenda: str) -> str:
     """Cria o container pai do carrossel. Retorna o container ID."""
     corpo = _post(f"{ACCOUNT_ID}/media", {

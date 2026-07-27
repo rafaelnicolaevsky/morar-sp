@@ -352,6 +352,11 @@ def escolher_estilo_visual() -> str:
     return random.choice(["esquerda", "centro"])
 
 
+def escolher_formato_post() -> str:
+    """Sorteia o formato do post do dia: carrossel ou imagem única (50/50)."""
+    return random.choice(["carrossel", "imagem_unica"])
+
+
 def _markdown_basico_para_html(texto: str) -> str:
     """Converte **negrito** e quebras de linha simples do markdown gerado na etapa 2."""
     texto = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", texto)
@@ -412,11 +417,16 @@ def _montar_html_slide(tema: str, alinhamento: str, eyebrow: str, titulo: str, c
 </html>"""
 
 
-def gerar_carrossel(dados_copy: dict, estilo: str) -> list[str]:
-    """Gera as imagens do carrossel e retorna a lista de caminhos dos arquivos."""
+def gerar_carrossel(dados_copy: dict, estilo: str, formato: str = "carrossel") -> list[str]:
+    """
+    Gera as imagens do post e retorna a lista de caminhos dos arquivos.
+    formato="carrossel": gera todos os slides. formato="imagem_unica": gera
+    só a capa (título geral + corpo do slide 1), como post de imagem única.
+    """
     tema = CORES_POR_PILAR.get(dados_copy["pilar"], "tema-azul")
     eyebrow = EYEBROW_POR_PILAR.get(dados_copy["pilar"], dados_copy["pilar"])
-    total = len(dados_copy["slides"])
+    slides_a_gerar = dados_copy["slides"][:1] if formato == "imagem_unica" else dados_copy["slides"]
+    total = len(slides_a_gerar)
 
     # Prioriza o termo de busca gerado pela etapa 2 (específico do assunto da
     # pauta, ex.: "cherry blossom park festival"). Fallback pra região em
@@ -445,7 +455,7 @@ def gerar_carrossel(dados_copy: dict, estilo: str) -> list[str]:
         navegador = p.chromium.launch()
         pagina = navegador.new_page(viewport={"width": LARGURA_CANVAS, "height": ALTURA_CANVAS})
 
-        for i, texto_slide in enumerate(dados_copy["slides"], start=1):
+        for i, texto_slide in enumerate(slides_a_gerar, start=1):
             eh_primeiro = i == 1
             eh_ultimo = i == total
             eh_intermediario = not eh_primeiro and not eh_ultimo
@@ -484,7 +494,8 @@ if __name__ == "__main__":
     copy_md = ler_copy_do_dia()
     dados_copy = parse_copy(copy_md)
     estilo = escolher_estilo_visual()
-    print(f"Estilo sorteado: {estilo} | Pilar: {dados_copy['pilar']}")
+    formato = escolher_formato_post()
+    print(f"Formato sorteado: {formato} | Estilo: {estilo} | Pilar: {dados_copy['pilar']}")
 
-    caminhos = gerar_carrossel(dados_copy, estilo)
+    caminhos = gerar_carrossel(dados_copy, estilo, formato)
     print(f"Carrossel gerado: {caminhos}")
