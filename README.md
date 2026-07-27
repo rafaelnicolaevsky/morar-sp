@@ -16,10 +16,16 @@ Orquestrado por `run_diario.py`.
 
 ## Configuração
 
-1. Copie `.env.example` para `.env` e preencha os tokens/chaves (Instagram e `ANTHROPIC_API_KEY`)
+1. Copie `.env.example` para `.env` e preencha os tokens/chaves (Instagram,
+   `ANTHROPIC_API_KEY` e `UNSPLASH_ACCESS_KEY` — opcional, sem ela o
+   carrossel cai pro fundo sólido de cor)
 2. Instale dependências: `pip install -r requirements.txt`
 3. Instale o navegador do Playwright (usado pela etapa 3 pra renderizar os slides): `playwright install chromium`
-4. Regras de conteúdo e tom estão em `config/config.md`
+4. Clone o repositório `morar-sp-midia` como pasta irmã deste projeto (ou
+   ajuste `MIDIA_REPO_PATH` no `.env`) — é onde as imagens do carrossel são
+   hospedadas publicamente (raw.githubusercontent.com) pra Graph API conseguir
+   buscá-las
+5. Regras de conteúdo e tom estão em `config/config.md`
 
 ## Estrutura
 

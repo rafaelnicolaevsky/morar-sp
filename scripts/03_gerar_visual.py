@@ -22,6 +22,10 @@ Identidade visual (aprovada em revisão de design, ver histórico do projeto):
     posicionado na metade inferior do layout (não centralizado no canvas
     inteiro)
 - Margem de 80px em todo o canvas (1080x1350)
+- Fundo: foto (Unsplash, buscada por palavra-chave do pilar/região em foco)
+  com overlay escuro pra legibilidade, texto branco. Se não houver foto
+  disponível (sem chave configurada, API fora, sem resultado), cai pro
+  fundo sólido creme com texto cinza-escuro — ver scripts/utils/imagens_fundo.py
 
 Papel de cada card no carrossel (contrato de formato definido na etapa 2):
 - Capa (1º slide): eyebrow + título geral (do copy.md) + corpo + rodapé (@handle)
@@ -38,9 +42,15 @@ Papel de cada card no carrossel (contrato de formato definido na etapa 2):
 import os
 import random
 import re
+import sys
 from datetime import date
+from pathlib import Path
 
 from playwright.sync_api import sync_playwright
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.utils.imagens_fundo import buscar_foto_de_fundo
+from scripts.utils.regiao import carregar_regiao_foco
 
 LARGURA_CANVAS = 1080
 ALTURA_CANVAS = 1350
@@ -81,6 +91,30 @@ body { font-family: 'Stack Sans Text', sans-serif; }
   flex-direction: column;
   position: relative;
 }
+
+.slide.tem-foto {
+  background-size: cover;
+  background-position: center;
+}
+.slide.tem-foto::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0.72));
+  z-index: 0;
+}
+.slide.tem-foto .conteudo,
+.slide.tem-foto .metade-inferior {
+  position: relative;
+  z-index: 1;
+}
+.slide.tem-foto .footer { z-index: 1; }
+.slide.tem-foto h1,
+.slide.tem-foto p,
+.slide.tem-foto .footer {
+  color: #FFFFFF;
+}
+.slide.tem-foto .footer { opacity: 0.85; }
 
 .slide.alinhado-esquerda {
   justify-content: center;
@@ -319,7 +353,7 @@ def _extrair_titulo_e_corpo(texto_slide: str) -> tuple[str, str]:
 
 
 def _montar_html_slide(tema: str, alinhamento: str, eyebrow: str, titulo: str, corpo: str,
-                        mostrar_eyebrow: bool, mostrar_footer: bool) -> str:
+                        mostrar_eyebrow: bool, mostrar_footer: bool, foto_url: str | None) -> str:
     bloco_eyebrow = f'<div class="eyebrow">{eyebrow}</div>' if mostrar_eyebrow else ""
     bloco_titulo = f"<h1>{titulo}</h1>" if titulo else ""
     corpo_html = _markdown_basico_para_html(corpo)
@@ -333,11 +367,14 @@ def _montar_html_slide(tema: str, alinhamento: str, eyebrow: str, titulo: str, c
 
     footer = f'<div class="footer alinhado-{alinhamento}">@morar_sp</div>' if mostrar_footer else ""
 
+    classe_foto = " tem-foto" if foto_url else ""
+    estilo_foto = f' style="background-image: url(\'{foto_url}\');"' if foto_url else ""
+
     return f"""<!doctype html>
 <html lang="pt-BR">
 <head><meta charset="utf-8"><style>{CSS}</style></head>
 <body>
-<div class="slide {tema} alinhado-{alinhamento}">
+<div class="slide {tema} alinhado-{alinhamento}{classe_foto}"{estilo_foto}>
   {corpo_slide}
   {footer}
 </div>
@@ -350,6 +387,14 @@ def gerar_carrossel(dados_copy: dict, estilo: str) -> list[str]:
     tema = CORES_POR_PILAR.get(dados_copy["pilar"], "tema-azul")
     eyebrow = EYEBROW_POR_PILAR.get(dados_copy["pilar"], dados_copy["pilar"])
     total = len(dados_copy["slides"])
+
+    termo_especifico = None
+    if dados_copy["pilar"] == "atracao":
+        try:
+            termo_especifico = carregar_regiao_foco()["regiao_principal"]
+        except FileNotFoundError:
+            termo_especifico = None
+    foto_url = buscar_foto_de_fundo(dados_copy["pilar"], termo_especifico)
 
     hoje = date.today().isoformat()
     pasta = f"conteudo/posts-{hoje}/carrossel"
@@ -375,7 +420,7 @@ def gerar_carrossel(dados_copy: dict, estilo: str) -> list[str]:
 
             html = _montar_html_slide(
                 tema, estilo, eyebrow, titulo_slide, corpo_slide,
-                mostrar_eyebrow, mostrar_footer,
+                mostrar_eyebrow, mostrar_footer, foto_url,
             )
             pagina.set_content(html)
             pagina.wait_for_timeout(300)  # tempo pra fonte do Google Fonts carregar

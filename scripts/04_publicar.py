@@ -2,35 +2,49 @@
 Etapa 4: Publicação do carrossel no Instagram via Graph API.
 
 Responsável por:
-- Ler o copy e as imagens do carrossel gerados nas etapas anteriores
+- Ler a legenda (etapa 2) e as imagens do carrossel (etapa 3) do dia
+- Hospedar as imagens no repo público morar-sp-midia (a Graph API exige
+  image_url público, não aceita upload de arquivo local) — ver
+  utils/hospedagem_midia.py
 - Publicar via utils/api_instagram.py
 - Registrar o resultado em logs/publicacoes.md
-
-Ainda não implementado — esqueleto para revisão de arquitetura.
-
-IMPORTANTE: as imagens do carrossel precisam estar acessíveis publicamente
-via URL (a Graph API não aceita upload direto de arquivo local para este
-endpoint) — isso implica hospedar as imagens geradas em algum lugar
-acessível (ex: bucket público, CDN) antes de publicar. Ponto em aberto
-a resolver antes de implementar esta etapa.
 """
 
+import re
+import sys
 from datetime import date
+from pathlib import Path
 
-from utils.api_instagram import (
-    criar_container_imagem,
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.utils.api_instagram import (
     criar_container_carrossel,
+    criar_container_imagem,
     publicar_container,
 )
+from scripts.utils.hospedagem_midia import publicar_imagens_no_repo_midia
 
 
-def ler_conteudo_do_dia():
+def ler_legenda_do_dia() -> str:
     hoje = date.today().isoformat()
     with open(f"conteudo/posts-{hoje}/copy.md", "r", encoding="utf-8") as f:
-        legenda = f.read()
-    # A implementar: listar imagens em conteudo/posts-{hoje}/carrossel/
-    imagens_urls: list[str] = []
-    return legenda, imagens_urls
+        copy_md = f.read()
+
+    match = re.search(r"(?m)^## Legenda\s*\n(.+?)\s*$", copy_md, re.DOTALL)
+    if not match:
+        raise ValueError("Não encontrei a seção '## Legenda' no copy.md de hoje.")
+    return match.group(1).strip()
+
+
+def listar_imagens_do_dia() -> list[str]:
+    hoje = date.today().isoformat()
+    pasta = Path(f"conteudo/posts-{hoje}/carrossel")
+    imagens = sorted(
+        pasta.glob("slide-*.png"),
+        key=lambda p: int(re.search(r"\d+", p.stem).group()),
+    )
+    if not imagens:
+        raise FileNotFoundError(f"Nenhuma imagem encontrada em {pasta}.")
+    return [str(p) for p in imagens]
 
 
 def registrar_log(resultado: dict) -> None:
@@ -40,10 +54,19 @@ def registrar_log(resultado: dict) -> None:
 
 
 if __name__ == "__main__":
-    legenda, imagens_urls = ler_conteudo_do_dia()
+    legenda = ler_legenda_do_dia()
+    caminhos_imagens = listar_imagens_do_dia()
 
+    print(f"Hospedando {len(caminhos_imagens)} imagens no repo morar-sp-midia...")
+    imagens_urls = publicar_imagens_no_repo_midia(caminhos_imagens)
+
+    print("Criando containers de mídia...")
     container_ids = [criar_container_imagem(url) for url in imagens_urls]
+
+    print("Criando container do carrossel...")
     container_pai = criar_container_carrossel(container_ids, legenda)
+
+    print("Publicando...")
     resultado = publicar_container(container_pai)
 
     registrar_log(resultado)
