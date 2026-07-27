@@ -25,11 +25,15 @@ Identidade visual (aprovada em revisão de design, ver histórico do projeto):
 - Fundo: foto (Unsplash, buscada pelas palavras-chave em inglês que a etapa 2
   gera pro assunto específico da pauta — ver campo "## Imagem" do copy.md),
   mesma foto em todos os slides do post (varia só entre posts diferentes).
-  Overlay na cor da linha editorial (85%) alternando a cada card entre dois
-  modos, pra não repetir sempre o mesmo tratamento:
-  - "box" (ímpares): cartão colorido só atrás do bloco de texto, resto da
-    foto em cor natural
-  - "cheio" (pares): cor cobrindo o slide inteiro
+  Overlay sorteado por card, dois modos (pra não repetir sempre o mesmo
+  tratamento), "gradiente" como principal (70%) e "box" secundário (30%):
+  - "gradiente": preto em gradiente (100% embaixo → 0% em cima, sem blur),
+    foto nítida no topo. Na variante "esquerda" o bloco de texto é
+    deslocado pra baixo (justify-content: flex-end) pra cair onde o
+    gradiente está mais forte — a "centro" já fica na metade inferior,
+    não precisa de ajuste.
+  - "box": cartão colorido (85%, cor da linha editorial) só atrás do bloco
+    de texto, resto da foto em cor natural
   Texto branco com leve sombra nos dois modos. Se não houver foto disponível
   (sem chave configurada, API fora, sem resultado), cai pro fundo sólido
   creme com texto cinza-escuro — ver scripts/utils/imagens_fundo.py
@@ -137,6 +141,30 @@ body { font-family: 'Stack Sans Text', sans-serif; }
   z-index: 1;
 }
 .slide.tem-foto.overlay-cheio .footer { z-index: 1; }
+
+/* Modo "gradiente": preto em gradiente (100% embaixo, 0% em cima), sem blur
+   — a foto fica nítida no topo e esmaece pra onde o texto está. */
+.slide.tem-foto.overlay-gradiente::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
+  z-index: 0;
+}
+.slide.tem-foto.overlay-gradiente .conteudo,
+.slide.tem-foto.overlay-gradiente .metade-inferior {
+  position: relative;
+  z-index: 1;
+}
+.slide.tem-foto.overlay-gradiente .footer { z-index: 1; }
+
+/* No modo gradiente, desloca o bloco pra baixo na variante "esquerda" (a
+   "centro" já fica na metade inferior por padrão, não precisa de ajuste) —
+   assim o texto cai onde o gradiente está mais forte/legível. */
+.slide.overlay-gradiente.alinhado-esquerda {
+  justify-content: flex-end;
+  padding-bottom: 220px;
+}
 
 .slide.alinhado-esquerda {
   justify-content: center;
@@ -467,7 +495,7 @@ def gerar_carrossel(dados_copy: dict, estilo: str, formato: str = "carrossel") -
 
             mostrar_eyebrow = not eh_intermediario
             mostrar_footer = eh_primeiro or eh_ultimo
-            modo_overlay = "box" if i % 2 == 1 else "cheio"  # alterna a cada card
+            modo_overlay = random.choices(["gradiente", "box"], weights=[70, 30], k=1)[0]  # gradiente = principal
 
             html = _montar_html_slide(
                 tema, estilo, eyebrow, titulo_slide, corpo_slide,
