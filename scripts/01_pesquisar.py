@@ -26,7 +26,6 @@ TIMEOUT = 15
 # Feeds específicos do nicho (sem necessidade de filtro por palavra-chave)
 FEEDS_NICHO = [
     ("Compra/venda e mercado imobiliário", "https://www.infomoney.com.br/tudo-sobre/mercado-imobiliario/feed/"),
-    ("Investimento (FIIs e afins)", "https://www.infomoney.com.br/onde-investir/feed/"),
 ]
 
 # Feeds gerais de economia — aplicamos filtro por palavra-chave (no título) para achar pautas do nicho
@@ -36,10 +35,19 @@ FEEDS_GERAIS = [
 
 PALAVRAS_CHAVE_NICHO = [
     "imóvel", "imóveis", "imobiliário", "imobiliária",
-    "aluguel", "financiamento imobiliário", "fipezap",
-    "fii", "fundo imobiliário", "fundos imobiliários",
+    "aluguel", "alugar", "locação", "financiamento imobiliário", "fipezap",
     "consórcio", "valorização de imóveis",
 ]
+
+# Pilar "comprar para alugar": busca dedicada no Google News (não é FII/fundo,
+# é imóvel físico como fonte de renda via locação)
+PALAVRAS_CHAVE_ALUGUEL = [
+    "aluguel", "alugar", "locação", "locatário", "inquilino",
+    "proprietário", "rentabilidade", "renda com imóvel",
+]
+QUERY_INVESTIMENTO_ALUGUEL = "aluguel de imóveis"
+JANELA_INVESTIMENTO_DIAS = 10
+MAX_ITENS_INVESTIMENTO = 5
 
 MAX_ITENS_POR_FEED = 5
 TAMANHO_MAX_RESUMO = 280
@@ -117,6 +125,24 @@ def _buscar_atracoes_distrito(distrito: str, limite: int) -> list[dict]:
     return formatados
 
 
+def _secao_investimento_aluguel() -> str:
+    """Pilar 'comprar para alugar': imóvel físico como fonte de renda via locação (não FII/fundo/ação)."""
+    try:
+        itens = buscar_mencoes_google_news(QUERY_INVESTIMENTO_ALUGUEL, JANELA_INVESTIMENTO_DIAS)
+    except (requests.RequestException, ET.ParseError):
+        itens = []
+
+    relevantes = [
+        item for item in itens
+        if any(palavra in item["titulo"].lower() for palavra in PALAVRAS_CHAVE_ALUGUEL)
+    ]
+    formatados = [
+        {"titulo": _limpar_texto(item["titulo"]), "link": item["link"], "resumo": ""}
+        for item in relevantes[:MAX_ITENS_INVESTIMENTO]
+    ]
+    return _formatar_secao("Investimento (comprar para alugar)", formatados)
+
+
 def _secao_regiao_foco() -> str:
     try:
         regiao_foco = carregar_regiao_foco()
@@ -165,6 +191,8 @@ def pesquisar_tendencias() -> str:
             secoes.append(f"## {categoria}\n\n_Falha ao buscar feed: {erro}_\n")
             continue
         secoes.append(_formatar_secao(categoria, itens))
+
+    secoes.append(_secao_investimento_aluguel())
 
     return "\n".join(secoes)
 

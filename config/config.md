@@ -15,8 +15,9 @@ publico: ICP misto — ver seção "Público-alvo (ICP)"
   eventos, lazer), potenciais candidatas a morar ali. Este é o pilar dominante:
   o algoritmo deve entregar o conteúdo para quem já circula fisicamente pela
   região retratada.
-- **25% investidor pessoa física** — quer diversificar patrimônio via imóveis/FIIs,
-  conteúdo mais analítico (dados, comparações, leitura de mercado).
+- **25% investidor pessoa física** — quer comprar imóvel para alugar (renda
+  passiva via aluguel, não FIIs/fundos/ações), conteúdo mais analítico
+  (rentabilidade, comparações, leitura de mercado).
 - **25% comprador de primeiro imóvel** — planejando a compra do imóvel próprio,
   conteúdo prático (financiamento, documentação, dicas de compra).
 - **Fora do ICP por enquanto:** corretores/profissionais do setor.
@@ -36,8 +37,18 @@ Três pilares:
    (menções recentes de atração/lifestyle no Google News), revisado a cada 15
    dias. **70% do conteúdo deste pilar vai na região principal, 30% nas
    secundárias** — ver `config/regiao_foco.json` para o estado atual.
-2. **Compra/venda de imóveis** (~25%) — corretores, imóvel próprio, dicas práticas.
-3. **Investimento imobiliário** (~25%) — FIIs, aluguel, valorização, leitura de mercado.
+2. **Compra/venda de imóveis** (~25%) — corretores, **imóvel próprio pra morar**,
+   dicas práticas de compra/financiamento.
+3. **Comprar para alugar** (~25%) — imóvel como investimento de renda (NÃO
+   FIIs/fundos/ações): rentabilidade de aluguel, aluguel tradicional vs.
+   temporada, custos ocultos de ser proprietário-locador (IPTU, condomínio,
+   vacância, manutenção), retorno total (aluguel + valorização), como
+   escolher um imóvel bom pra alugar, financiamento de segundo imóvel,
+   gestão de inquilino/contrato.
+
+**Diferença entre os pilares 2 e 3:** pilar 2 é sobre comprar pra morar
+(o imóvel é onde o comprador vai viver); pilar 3 é sobre comprar pra ser
+dono e alugar pra terceiros (o imóvel é fonte de renda).
 
 Fora do escopo por enquanto: construção/reforma/decoração.
 
