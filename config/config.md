@@ -73,6 +73,14 @@ Fora do escopo por enquanto: construção/reforma/decoração.
     responde por completo o que abriu, nunca deixa a resposta subentendida
   - Antes-Depois-Ponte (BAB) — base: contraste/ancoragem
   - Reciprocidade — base: princípio de Cialdini; entrega valor real antes do CTA
+- **Formatação da legenda**: escaneável, quebrando em parágrafos curtos
+  (2-3 frases cada) com uma linha em branco entre cada parágrafo — nunca
+  um bloco único de texto denso.
+- **Hashtags**: sempre exatamente 3, com variações semânticas
+  complementares (ex.: uma sobre o lugar/tema específico, uma sobre a
+  região/bairro, uma mais ampla sobre o nicho) — nunca 3 hashtags que
+  dizem basicamente a mesma coisa (ex.: #ParqueDoCarmo #ParqueCarmoSP
+  #ParqueDoCarmoSP é redundante, não variado).
 
 ## Regras de redação (obrigatórias)
 

@@ -192,8 +192,16 @@ pra fechar? um contraste antes/depois? algo pra dar de valor antes do CTA?):
 
 Legenda: direta e coerente com o framework escolhido, sem enrolação —
 normalmente 2-3 frases já bastam pra aplicar o framework com substância.
-Não alongue por alongar; corte qualquer frase que não agregue. + até 3
-hashtags relevantes no final, sem tom comercial.
+Não alongue por alongar; corte qualquer frase que não agregue.
+
+Formatação da legenda: quebre em parágrafos curtos (2-3 frases cada) com
+uma linha em branco entre cada parágrafo — nunca um bloco único de texto
+denso, precisa ser escaneável.
+
+Hashtags: exatamente 3, com variações semânticas complementares (uma sobre
+o lugar/tema específico, uma sobre a região/bairro, uma mais ampla sobre o
+nicho) — nunca 3 hashtags que dizem basicamente a mesma coisa. Sem tom
+comercial.
 
 Por fim, gere 3-5 palavras-chave EM INGLÊS pra buscar uma foto de fundo no
 Unsplash que combine com o ASSUNTO ESPECÍFICO do post (não um termo genérico
