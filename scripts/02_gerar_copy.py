@@ -133,6 +133,13 @@ Template desta pauta: {TEMPLATE_INSTRUCOES[template]}
 Além disso, gere uma legenda (caption) do post: 1-2 frases + até 3 hashtags
 relevantes, sem tom comercial.
 
+Por fim, gere 3-5 palavras-chave EM INGLÊS pra buscar uma foto de fundo no
+Unsplash que combine com o ASSUNTO ESPECÍFICO do post (não um termo genérico
+de "São Paulo" ou do pilar) — ex.: se o post é sobre a Festa das Cerejeiras
+no Parque do Carmo, use algo como "cherry blossom park festival", não
+"são paulo city". Se o post for sobre FIIs, algo como "real estate fund
+building" em vez de "finance". Pense no assunto real da pauta.
+
 Responda SOMENTE em markdown, neste formato exato (### só aparece do
 slide 2 em diante — o slide 1 não usa, ele já tem o título geral do "#"):
 # [Título geral do carrossel]
@@ -150,6 +157,9 @@ slide 2 em diante — o slide 1 não usa, ele já tem o título geral do "#"):
 
 ## Legenda
 [texto da legenda]
+
+## Imagem
+[palavras-chave em inglês pra busca de foto, ex: "cherry blossom park festival"]
 """
 
 

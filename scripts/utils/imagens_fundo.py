@@ -61,13 +61,14 @@ def _registrar_download(foto: dict) -> None:
 def buscar_foto_de_fundo(pilar: str, termo_especifico: str | None) -> str | None:
     """
     Retorna a URL de uma foto de fundo, tentando do termo mais específico
-    (ex.: região em foco) ao mais genérico do pilar, e por fim um genérico
-    absoluto. Retorna None se nada for encontrado ou a API não estiver
-    disponível/configurada.
+    (normalmente as palavras-chave em inglês geradas pela etapa 2 pro
+    assunto exato da pauta) ao mais genérico do pilar, e por fim um
+    genérico absoluto. Retorna None se nada for encontrado ou a API não
+    estiver disponível/configurada.
     """
     tentativas = []
     if termo_especifico:
-        tentativas.append(f"{termo_especifico} são paulo")
+        tentativas.append(termo_especifico)
     tentativas.append(QUERIES_POR_PILAR.get(pilar, QUERY_GENERICA_FINAL))
     tentativas.append(QUERY_GENERICA_FINAL)
 

@@ -22,10 +22,14 @@ Identidade visual (aprovada em revisão de design, ver histórico do projeto):
     posicionado na metade inferior do layout (não centralizado no canvas
     inteiro)
 - Margem de 80px em todo o canvas (1080x1350)
-- Fundo: foto (Unsplash, buscada por palavra-chave do pilar/região em foco)
-  com overlay escuro pra legibilidade, texto branco. Se não houver foto
-  disponível (sem chave configurada, API fora, sem resultado), cai pro
-  fundo sólido creme com texto cinza-escuro — ver scripts/utils/imagens_fundo.py
+- Fundo: foto (Unsplash, buscada pelas palavras-chave em inglês que a etapa 2
+  gera pro assunto específico da pauta — ver campo "## Imagem" do copy.md),
+  mantida em cor natural (sem tingir a imagem toda). Só o bloco de texto
+  ganha um cartão translúcido na cor da linha editorial (30%) + texto
+  branco com leve sombra, pra legibilidade sem repetir o mesmo tratamento
+  visual em todo slide. Se não houver foto disponível (sem chave
+  configurada, API fora, sem resultado), cai pro fundo sólido creme com
+  texto cinza-escuro — ver scripts/utils/imagens_fundo.py
 
 Papel de cada card no carrossel (contrato de formato definido na etapa 2):
 - Capa (1º slide): eyebrow + título geral (do copy.md) + corpo + rodapé (@handle)
@@ -96,25 +100,23 @@ body { font-family: 'Stack Sans Text', sans-serif; }
   background-size: cover;
   background-position: center;
 }
-.slide.tem-foto::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0.72));
-  z-index: 0;
+/* Sem overlay na foto inteira: mantém a cor natural da imagem. Só o bloco
+   de texto ganha um "cartão" translúcido (cor da linha editorial, 30%)
+   pra garantir legibilidade — a foto ao redor fica intocada. */
+.slide.tem-foto .conteudo {
+  padding: 48px;
+  border-radius: 28px;
 }
-.slide.tem-foto .conteudo,
-.slide.tem-foto .metade-inferior {
-  position: relative;
-  z-index: 1;
-}
-.slide.tem-foto .footer { z-index: 1; }
+.slide.tema-verde.tem-foto .conteudo { background: rgba(108, 138, 31, 0.3); }
+.slide.tema-azul.tem-foto .conteudo { background: rgba(59, 118, 192, 0.3); }
+.slide.tema-laranja.tem-foto .conteudo { background: rgba(232, 97, 31, 0.3); }
 .slide.tem-foto h1,
 .slide.tem-foto p,
 .slide.tem-foto .footer {
   color: #FFFFFF;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
 }
-.slide.tem-foto .footer { opacity: 0.85; }
+.slide.tem-foto .footer { opacity: 0.95; }
 
 .slide.alinhado-esquerda {
   justify-content: center;
@@ -269,7 +271,9 @@ function __quebraBalanceada(palavras, maxPorLinha) {
 
 window.__quebrarTitulo = function (h1el, modo) {
   const container = h1el.closest('.conteudo');
-  const larguraMax = container.getBoundingClientRect().width;
+  const estiloContainer = getComputedStyle(container);
+  const paddingH = parseFloat(estiloContainer.paddingLeft) + parseFloat(estiloContainer.paddingRight);
+  const larguraMax = container.getBoundingClientRect().width - paddingH;
   const palavras = h1el.textContent.trim().split(/\s+/);
   const { medir, limpar } = __medirFabrica(h1el);
 
@@ -307,15 +311,20 @@ def parse_copy(copy_md: str) -> dict:
     secoes = re.split(r"(?m)^## (.+)$", copy_md)
     pares = list(zip(secoes[1::2], secoes[2::2]))
 
-    slides, legenda = [], ""
+    slides, legenda, termo_imagem = [], "", ""
     for nome, corpo in pares:
         corpo = corpo.strip()
         if nome.strip().lower().startswith("slide"):
             slides.append(corpo)
         elif nome.strip().lower().startswith("legenda"):
             legenda = corpo
+        elif nome.strip().lower().startswith("imagem"):
+            termo_imagem = corpo.strip().strip('"').strip("'")
 
-    return {"pilar": pilar, "titulo": titulo, "slides": slides, "legenda": legenda}
+    return {
+        "pilar": pilar, "titulo": titulo, "slides": slides,
+        "legenda": legenda, "termo_imagem": termo_imagem,
+    }
 
 
 def escolher_estilo_visual() -> str:
@@ -388,8 +397,12 @@ def gerar_carrossel(dados_copy: dict, estilo: str) -> list[str]:
     eyebrow = EYEBROW_POR_PILAR.get(dados_copy["pilar"], dados_copy["pilar"])
     total = len(dados_copy["slides"])
 
-    termo_especifico = None
-    if dados_copy["pilar"] == "atracao":
+    # Prioriza o termo de busca gerado pela etapa 2 (específico do assunto da
+    # pauta, ex.: "cherry blossom park festival"). Fallback pra região em
+    # foco (copy.md gerado antes desse campo existir) — buscar_foto_de_fundo
+    # já cuida do fallback genérico por pilar se nada disso existir/achar.
+    termo_especifico = dados_copy.get("termo_imagem") or None
+    if not termo_especifico and dados_copy["pilar"] == "atracao":
         try:
             termo_especifico = carregar_regiao_foco()["regiao_principal"]
         except FileNotFoundError:
