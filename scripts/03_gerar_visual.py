@@ -352,6 +352,13 @@ def parse_copy(copy_md: str) -> dict:
     titulo_match = re.search(r"(?m)^# (.+)$", copy_md)
     titulo = titulo_match.group(1).strip() if titulo_match else ""
 
+    # O modelo às vezes esquece o cabeçalho "## Slide 1" e cola o corpo do
+    # slide 1 direto após o título geral. Se sobrar conteúdo substantivo
+    # entre o título e a primeira "## " seção, é o corpo do slide 1 perdido
+    # — recuperamos aqui em vez de deixar o parser descartar silenciosamente.
+    corpo_apos_titulo = copy_md[titulo_match.end():] if titulo_match else copy_md
+    corpo_orfao_slide1 = re.split(r"(?m)^## ", corpo_apos_titulo, maxsplit=1)[0].strip()
+
     secoes = re.split(r"(?m)^## (.+)$", copy_md)
     pares = list(zip(secoes[1::2], secoes[2::2]))
 
@@ -364,6 +371,9 @@ def parse_copy(copy_md: str) -> dict:
             legenda = corpo
         elif nome.strip().lower().startswith("imagem"):
             termo_imagem = corpo.strip().strip('"').strip("'")
+
+    if corpo_orfao_slide1:
+        slides.insert(0, corpo_orfao_slide1)
 
     return {
         "pilar": pilar, "titulo": titulo, "slides": slides,

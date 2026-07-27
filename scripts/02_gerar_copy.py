@@ -203,7 +203,10 @@ no Parque do Carmo, use algo como "cherry blossom park festival", não
 building" em vez de "finance". Pense no assunto real da pauta.
 
 Responda SOMENTE em markdown, neste formato exato (### só aparece do
-slide 2 em diante — o slide 1 não usa, ele já tem o título geral do "#"):
+slide 2 em diante — o slide 1 não usa, ele já tem o título geral do "#").
+IMPORTANTE: o cabeçalho "## Slide 1" é OBRIGATÓRIO mesmo o slide 1 não
+tendo mini-título — nunca cole o corpo do slide 1 direto depois do "#
+[Título]" sem esse cabeçalho, isso quebra o parser:
 # [Título geral do carrossel]
 
 ## Slide 1
