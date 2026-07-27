@@ -71,6 +71,13 @@ Fora do escopo por enquanto: construção/reforma/decoração.
   intermediários (mini-título obrigatório + corpo opcional) → último slide
   (CTA obrigatório como mini-título — curtir, comentar, compartilhar ou
   salvar, pode ser em forma de pergunta — + corpo opcional).
+- **CTA fiel ao conteúdo**: o CTA do último slide só pode se referir ao que
+  o post realmente mostrou. Nunca prometer "programação completa",
+  "próximas datas", "agenda" ou qualquer detalhe que o post não forneceu de
+  fato — isso engana quem salva o post esperando encontrar aquilo depois.
+  Prefira CTAs sobre o assunto em si (ex.: "já foi/já conhece esse lugar?
+  comenta aqui", "manda pra quem seu curte esse tipo de passeio", "salva
+  pra lembrar desse lugar da próxima vez que for pensar em se mudar").
 
 ## Regra de despersonalização (obrigatória)
 

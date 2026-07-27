@@ -25,13 +25,14 @@ Identidade visual (aprovada em revisão de design, ver histórico do projeto):
 - Fundo: foto (Unsplash, buscada pelas palavras-chave em inglês que a etapa 2
   gera pro assunto específico da pauta — ver campo "## Imagem" do copy.md),
   mesma foto em todos os slides do post (varia só entre posts diferentes).
-  Overlay sorteado por card, dois modos (pra não repetir sempre o mesmo
-  tratamento), "gradiente" como principal (70%) e "box" secundário (30%):
-  - "gradiente": preto em gradiente (100% embaixo → 0% em cima, sem blur),
-    foto nítida no topo. Na variante "esquerda" o bloco de texto é
-    deslocado pra baixo (justify-content: flex-end) pra cair onde o
-    gradiente está mais forte — a "centro" já fica na metade inferior,
-    não precisa de ajuste.
+  Overlay sorteado por card (exceto a capa, que é sempre "gradiente"), dois
+  modos pra não repetir sempre o mesmo tratamento — "gradiente" principal
+  (70% dos demais cards) e "box" secundário (30%):
+  - "gradiente": preto em gradiente, fixo em 75% embaixo (nunca 100%) até
+    0% em cima, sem blur — foto nítida no topo. Na variante "esquerda" o
+    bloco de texto é deslocado pra baixo (justify-content: flex-end) pra
+    cair onde o gradiente está mais forte — a "centro" já fica na metade
+    inferior e não desloca na horizontal nem na vertical além disso.
   - "box": cartão colorido (85%, cor da linha editorial) só atrás do bloco
     de texto, resto da foto em cor natural
   Texto branco com leve sombra nos dois modos. Se não houver foto disponível
@@ -142,13 +143,14 @@ body { font-family: 'Stack Sans Text', sans-serif; }
 }
 .slide.tem-foto.overlay-cheio .footer { z-index: 1; }
 
-/* Modo "gradiente": preto em gradiente (100% embaixo, 0% em cima), sem blur
-   — a foto fica nítida no topo e esmaece pra onde o texto está. */
+/* Modo "gradiente": preto em gradiente (fixo em 75% embaixo, nunca 100%,
+   até 0% em cima), sem blur — a foto fica nítida no topo e esmaece pra
+   onde o texto está. */
 .slide.tem-foto.overlay-gradiente::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0) 100%);
   z-index: 0;
 }
 .slide.tem-foto.overlay-gradiente .conteudo,
@@ -495,7 +497,10 @@ def gerar_carrossel(dados_copy: dict, estilo: str, formato: str = "carrossel") -
 
             mostrar_eyebrow = not eh_intermediario
             mostrar_footer = eh_primeiro or eh_ultimo
-            modo_overlay = random.choices(["gradiente", "box"], weights=[70, 30], k=1)[0]  # gradiente = principal
+            if eh_primeiro:
+                modo_overlay = "gradiente"  # obrigatório na capa
+            else:
+                modo_overlay = random.choices(["gradiente", "box"], weights=[70, 30], k=1)[0]
 
             html = _montar_html_slide(
                 tema, estilo, eyebrow, titulo_slide, corpo_slide,
