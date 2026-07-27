@@ -190,8 +190,10 @@ pra fechar? um contraste antes/depois? algo pra dar de valor antes do CTA?):
 
 {chr(10).join(f"- **{nome}**: {instrucao}" for nome, instrucao in FRAMEWORK_LEGENDA_INSTRUCOES.items() if nome in FRAMEWORKS_POR_PILAR[pilar])}
 
-Legenda: 3-5 frases (não 1-2 — precisa ter substância) + até 3 hashtags
-relevantes no final, sem tom comercial.
+Legenda: direta e coerente com o framework escolhido, sem enrolação —
+normalmente 2-3 frases já bastam pra aplicar o framework com substância.
+Não alongue por alongar; corte qualquer frase que não agregue. + até 3
+hashtags relevantes no final, sem tom comercial.
 
 Por fim, gere 3-5 palavras-chave EM INGLÊS pra buscar uma foto de fundo no
 Unsplash que combine com o ASSUNTO ESPECÍFICO do post (não um termo genérico
