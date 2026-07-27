@@ -24,12 +24,15 @@ Identidade visual (aprovada em revisão de design, ver histórico do projeto):
 - Margem de 80px em todo o canvas (1080x1350)
 - Fundo: foto (Unsplash, buscada pelas palavras-chave em inglês que a etapa 2
   gera pro assunto específico da pauta — ver campo "## Imagem" do copy.md),
-  mantida em cor natural (sem tingir a imagem toda). Só o bloco de texto
-  ganha um cartão translúcido na cor da linha editorial (30%) + texto
-  branco com leve sombra, pra legibilidade sem repetir o mesmo tratamento
-  visual em todo slide. Se não houver foto disponível (sem chave
-  configurada, API fora, sem resultado), cai pro fundo sólido creme com
-  texto cinza-escuro — ver scripts/utils/imagens_fundo.py
+  mesma foto em todos os slides do post (varia só entre posts diferentes).
+  Overlay na cor da linha editorial (85%) alternando a cada card entre dois
+  modos, pra não repetir sempre o mesmo tratamento:
+  - "box" (ímpares): cartão colorido só atrás do bloco de texto, resto da
+    foto em cor natural
+  - "cheio" (pares): cor cobrindo o slide inteiro
+  Texto branco com leve sombra nos dois modos. Se não houver foto disponível
+  (sem chave configurada, API fora, sem resultado), cai pro fundo sólido
+  creme com texto cinza-escuro — ver scripts/utils/imagens_fundo.py
 
 Papel de cada card no carrossel (contrato de formato definido na etapa 2):
 - Capa (1º slide): eyebrow + título geral (do copy.md) + corpo + rodapé (@handle)
@@ -100,16 +103,6 @@ body { font-family: 'Stack Sans Text', sans-serif; }
   background-size: cover;
   background-position: center;
 }
-/* Sem overlay na foto inteira: mantém a cor natural da imagem. Só o bloco
-   de texto ganha um "cartão" translúcido (cor da linha editorial, 30%)
-   pra garantir legibilidade — a foto ao redor fica intocada. */
-.slide.tem-foto .conteudo {
-  padding: 48px;
-  border-radius: 28px;
-}
-.slide.tema-verde.tem-foto .conteudo { background: rgba(108, 138, 31, 0.3); }
-.slide.tema-azul.tem-foto .conteudo { background: rgba(59, 118, 192, 0.3); }
-.slide.tema-laranja.tem-foto .conteudo { background: rgba(232, 97, 31, 0.3); }
 .slide.tem-foto h1,
 .slide.tem-foto p,
 .slide.tem-foto .footer {
@@ -117,6 +110,33 @@ body { font-family: 'Stack Sans Text', sans-serif; }
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
 }
 .slide.tem-foto .footer { opacity: 0.95; }
+
+/* Modo "box": cartão colorido (85%) só atrás do bloco de texto — o resto
+   da foto fica em cor natural. Alterna com o modo "cheio" a cada card. */
+.slide.tem-foto.overlay-box .conteudo {
+  padding: 48px;
+  border-radius: 28px;
+}
+.slide.tema-verde.tem-foto.overlay-box .conteudo { background: rgba(108, 138, 31, 0.85); }
+.slide.tema-azul.tem-foto.overlay-box .conteudo { background: rgba(59, 118, 192, 0.85); }
+.slide.tema-laranja.tem-foto.overlay-box .conteudo { background: rgba(232, 97, 31, 0.85); }
+
+/* Modo "cheio": cor do pilar (85%) cobrindo o slide inteiro, sem cartão. */
+.slide.tem-foto.overlay-cheio::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.slide.tema-verde.tem-foto.overlay-cheio::before { background: rgba(108, 138, 31, 0.85); }
+.slide.tema-azul.tem-foto.overlay-cheio::before { background: rgba(59, 118, 192, 0.85); }
+.slide.tema-laranja.tem-foto.overlay-cheio::before { background: rgba(232, 97, 31, 0.85); }
+.slide.tem-foto.overlay-cheio .conteudo,
+.slide.tem-foto.overlay-cheio .metade-inferior {
+  position: relative;
+  z-index: 1;
+}
+.slide.tem-foto.overlay-cheio .footer { z-index: 1; }
 
 .slide.alinhado-esquerda {
   justify-content: center;
@@ -362,7 +382,8 @@ def _extrair_titulo_e_corpo(texto_slide: str) -> tuple[str, str]:
 
 
 def _montar_html_slide(tema: str, alinhamento: str, eyebrow: str, titulo: str, corpo: str,
-                        mostrar_eyebrow: bool, mostrar_footer: bool, foto_url: str | None) -> str:
+                        mostrar_eyebrow: bool, mostrar_footer: bool, foto_url: str | None,
+                        modo_overlay: str) -> str:
     bloco_eyebrow = f'<div class="eyebrow">{eyebrow}</div>' if mostrar_eyebrow else ""
     bloco_titulo = f"<h1>{titulo}</h1>" if titulo else ""
     corpo_html = _markdown_basico_para_html(corpo)
@@ -376,7 +397,7 @@ def _montar_html_slide(tema: str, alinhamento: str, eyebrow: str, titulo: str, c
 
     footer = f'<div class="footer alinhado-{alinhamento}">@morar_sp</div>' if mostrar_footer else ""
 
-    classe_foto = " tem-foto" if foto_url else ""
+    classe_foto = f" tem-foto overlay-{modo_overlay}" if foto_url else ""
     estilo_foto = f' style="background-image: url(\'{foto_url}\');"' if foto_url else ""
 
     return f"""<!doctype html>
@@ -430,10 +451,11 @@ def gerar_carrossel(dados_copy: dict, estilo: str) -> list[str]:
 
             mostrar_eyebrow = not eh_intermediario
             mostrar_footer = eh_primeiro or eh_ultimo
+            modo_overlay = "box" if i % 2 == 1 else "cheio"  # alterna a cada card
 
             html = _montar_html_slide(
                 tema, estilo, eyebrow, titulo_slide, corpo_slide,
-                mostrar_eyebrow, mostrar_footer, foto_url,
+                mostrar_eyebrow, mostrar_footer, foto_url, modo_overlay,
             )
             pagina.set_content(html)
             pagina.wait_for_timeout(300)  # tempo pra fonte do Google Fonts carregar
