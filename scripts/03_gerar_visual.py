@@ -346,7 +346,11 @@ def ler_copy_do_dia() -> str:
 
 def parse_copy(copy_md: str) -> dict:
     """Extrai pilar/template, título, slides (numerados) e legenda do copy.md da etapa 2."""
-    cabecalho = re.search(r"<!--\s*pilar:\s*(\w+)\s*\|\s*template:\s*(\w+)\s*-->", copy_md)
+    # Sem exigir "-->" logo após template — o cabeçalho pode ter mais campos
+    # depois (framework_legenda, tema, vies), e exigir o fechamento ali
+    # fazia esse regex nunca bater (bug real: pilar sempre caía no fallback
+    # "compra_venda", mesmo em posts de outros pilares).
+    cabecalho = re.search(r"<!--\s*pilar:\s*(\w+)\s*\|\s*template:\s*(\w+)", copy_md)
     pilar = cabecalho.group(1) if cabecalho else "compra_venda"
 
     titulo_match = re.search(r"(?m)^# (.+)$", copy_md)

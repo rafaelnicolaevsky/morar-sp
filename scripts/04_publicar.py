@@ -23,18 +23,31 @@ from scripts.utils.api_instagram import (
     esperar_container_pronto,
     publicar_container,
 )
+from scripts.utils.historico_temas import registrar_tema
 from scripts.utils.hospedagem_midia import publicar_imagens_no_repo_midia
 
 
-def ler_legenda_do_dia() -> str:
+def ler_copy_do_dia() -> str:
     hoje = date.today().isoformat()
     with open(f"conteudo/posts-{hoje}/copy.md", "r", encoding="utf-8") as f:
-        copy_md = f.read()
+        return f.read()
 
+
+def ler_legenda_do_dia(copy_md: str) -> str:
     match = re.search(r"(?m)^## Legenda\s*\n(.+?)\s*$", copy_md, re.DOTALL)
     if not match:
         raise ValueError("Não encontrei a seção '## Legenda' no copy.md de hoje.")
     return match.group(1).strip()
+
+
+def ler_cabecalho_do_dia(copy_md: str) -> dict:
+    """Lê pilar/tema/vies do cabeçalho HTML comment gerado pela etapa 2 — usado pra registrar no histórico."""
+    cabecalho = re.search(
+        r"<!--.*?pilar:\s*(\w+).*?tema:\s*(.+?)\s*\|\s*vies:\s*(.+?)\s*-->", copy_md, re.DOTALL
+    )
+    if not cabecalho:
+        return {"pilar": "", "tema": "", "vies": ""}
+    return {"pilar": cabecalho.group(1), "tema": cabecalho.group(2), "vies": cabecalho.group(3)}
 
 
 def listar_imagens_do_dia() -> list[str]:
@@ -56,7 +69,9 @@ def registrar_log(resultado: dict) -> None:
 
 
 if __name__ == "__main__":
-    legenda = ler_legenda_do_dia()
+    copy_md = ler_copy_do_dia()
+    legenda = ler_legenda_do_dia(copy_md)
+    cabecalho = ler_cabecalho_do_dia(copy_md)
     caminhos_imagens = listar_imagens_do_dia()
 
     print(f"Hospedando {len(caminhos_imagens)} imagem(ns) no repo morar-sp-midia...")
@@ -78,4 +93,9 @@ if __name__ == "__main__":
     resultado = publicar_container(container_pai)
 
     registrar_log(resultado)
+
+    if cabecalho["tema"] and cabecalho["vies"]:
+        registrar_tema(cabecalho["tema"], cabecalho["vies"], cabecalho["pilar"], date.today().isoformat())
+        print(f"Tema/viés registrados no histórico: {cabecalho['tema']} | {cabecalho['vies']}")
+
     print(f"Publicado: {resultado}")

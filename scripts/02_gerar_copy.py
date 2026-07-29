@@ -16,10 +16,15 @@ Responsável por:
 import os
 import random
 import re
+import sys
 from datetime import date
+from pathlib import Path
 
 import anthropic
 from dotenv import load_dotenv
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.utils.historico_temas import temas_recentes_para_prompt
 
 load_dotenv()
 
@@ -150,6 +155,13 @@ def selecionar_pilar_e_template(secoes: dict[str, str]) -> tuple[str, str]:
     return pilar, template
 
 
+def _bloco_historico_temas() -> str:
+    historico = temas_recentes_para_prompt()
+    if not historico:
+        return "(nenhum post publicado ainda)"
+    return "\n".join(f"- tema: {h['tema']} | viés: {h['vies']} (pilar: {h['pilar']}, {h['data']})" for h in historico)
+
+
 def _montar_prompt_sistema(template: str, pilar: str) -> str:
     with open("config/config.md", "r", encoding="utf-8") as f:
         regras_projeto = f.read()
@@ -158,6 +170,12 @@ def _montar_prompt_sistema(template: str, pilar: str) -> str:
 
 Regras do projeto (config/config.md):
 {regras_projeto}
+
+Temas e viés JÁ PUBLICADOS — não repita a mesma combinação tema+viés. O
+tema pode voltar a aparecer (é normal um nicho ter temas recorrentes, tipo
+"valorização por transporte"), mas o VIÉS (o ângulo específico, o que a
+pauta de hoje diz de diferente sobre esse tema) precisa ser outro:
+{_bloco_historico_temas()}
 
 Formato do post: carrossel de Instagram. A partir da pauta fornecida, gere
 entre 4 e 7 slides, com esta estrutura fixa:
@@ -210,6 +228,16 @@ no Parque do Carmo, use algo como "cherry blossom park festival", não
 "são paulo city". Se o post for sobre FIIs, algo como "real estate fund
 building" em vez de "finance". Pense no assunto real da pauta.
 
+Declare também, de forma explícita e curta:
+- "Tema": o assunto central do post (ex.: "valorização por transporte
+  público", "Festa das Cerejeiras no Parque do Carmo") — pode se repetir
+  com outros posts ao longo do tempo, é só uma etiqueta do assunto.
+- "Viés": o ângulo específico de hoje sobre esse tema (ex.: "o metrô
+  valoriza, mas o barulho da obra desvaloriza no curto prazo" é diferente
+  de "quem compra antes do metrô abrir historicamente sai ganhando") —
+  este é o que NÃO pode repetir a combinação com o tema (ver histórico
+  acima).
+
 Responda SOMENTE em markdown, neste formato exato (### só aparece do
 slide 2 em diante — o slide 1 não usa, ele já tem o título geral do "#").
 IMPORTANTE: o cabeçalho "## Slide 1" é OBRIGATÓRIO mesmo o slide 1 não
@@ -236,6 +264,12 @@ tendo mini-título — nunca cole o corpo do slide 1 direto depois do "#
 
 ## Imagem
 [palavras-chave em inglês pra busca de foto, ex: "cherry blossom park festival"]
+
+## Tema
+[etiqueta curta do assunto central]
+
+## Viés
+[ângulo específico de hoje sobre esse tema]
 """
 
 
@@ -271,14 +305,25 @@ def gerar_copy(pauta: str, template: str, pilar: str) -> str:
     return _remover_preambulo(_extrair_texto(resposta))
 
 
-def _extrair_framework_escolhido(texto: str) -> tuple[str, str]:
-    """Extrai a seção '## Framework' do texto gerado. Retorna (framework, texto_sem_a_secao)."""
-    match = re.search(r"(?m)^## Framework\s*\n(.+?)\s*(?=\n##|\Z)", texto, re.DOTALL)
+def _extrair_secao(texto: str, nome_secao: str) -> tuple[str, str]:
+    """Extrai uma seção '## <nome_secao>' do texto gerado (metadado, não vai pro post). Retorna (conteúdo, texto_sem_a_secao)."""
+    match = re.search(rf"(?m)^## {nome_secao}\s*\n(.+?)\s*(?=\n##|\Z)", texto, re.DOTALL)
     if not match:
         return "não identificado", texto
-    framework = match.group(1).strip()
+    conteudo = match.group(1).strip()
     texto_limpo = texto[:match.start()] + texto[match.end():]
-    return framework, re.sub(r"\n{3,}", "\n\n", texto_limpo)
+    return conteudo, re.sub(r"\n{3,}", "\n\n", texto_limpo)
+
+
+def _extrair_framework_escolhido(texto: str) -> tuple[str, str]:
+    return _extrair_secao(texto, "Framework")
+
+
+def _extrair_tema_e_vies(texto: str) -> tuple[str, str, str]:
+    """Extrai '## Tema' e '## Viés'. Retorna (tema, vies, texto_sem_as_secoes)."""
+    tema, texto = _extrair_secao(texto, "Tema")
+    vies, texto = _extrair_secao(texto, "Viés")
+    return tema, vies, texto
 
 
 def despersonalizar(texto: str) -> str:
@@ -287,6 +332,13 @@ def despersonalizar(texto: str) -> str:
     marcas/imóveis privados específicos, mantendo o dado ou insight genérico.
     Lugares públicos (parques, festivais, ruas) NÃO são removidos — exceção
     documentada em config/config.md.
+
+    Blindagem: o modelo às vezes (intermitente) ignora a instrução de
+    devolver o texto completo e responde só uma confirmação tipo "já está
+    de acordo" — sem isso, esse post ia pro ar com esse resumo em vez do
+    conteúdo de verdade. Se a resposta não parece um copy.md válido
+    (não começa com "# " ou não tem as seções essenciais), descarta a
+    revisão e usa o texto original sem despersonalizar.
     """
     client = anthropic.Anthropic()
     system = (
@@ -296,9 +348,12 @@ def despersonalizar(texto: str) -> str:
         "X anunciou reajuste de 8%' vira 'reajustes de até 8% têm sido registrados no "
         "setor'). NÃO remova nomes de lugares públicos (parques, praças, festivais, "
         "ruas, equipamentos culturais) — essa é a exceção documentada, citar esses "
-        "nomes é o próprio conteúdo do pilar de bairro. Se o texto já estiver de "
-        "acordo, devolva sem alterações. Responda SOMENTE com o texto revisado, no "
-        "mesmo formato markdown recebido, sem comentários adicionais."
+        "nomes é o próprio conteúdo do pilar de bairro.\n\n"
+        "IMPORTANTE: SEMPRE devolva o texto INTEIRO, do título '# ' até a seção "
+        "'## Viés' no final, mesmo que nada precise mudar — NUNCA responda só "
+        "confirmando que está tudo certo, isso quebra o pipeline (o texto "
+        "revisado É o post que vai pro ar). Responda SOMENTE com o markdown "
+        "completo, sem comentário nenhum antes ou depois."
     )
     resposta = client.messages.create(
         model=MODELO,
@@ -306,15 +361,24 @@ def despersonalizar(texto: str) -> str:
         system=system,
         messages=[{"role": "user", "content": texto}],
     )
-    return _remover_preambulo(_extrair_texto(resposta))
+    revisado = _remover_preambulo(_extrair_texto(resposta))
+
+    valido = revisado.strip().startswith("#") and "## Legenda" in revisado and len(revisado) >= len(texto) * 0.6
+    if not valido:
+        print("AVISO: revisão de despersonalização veio incompleta/inválida — usando o texto original sem revisar.")
+        return texto
+    return revisado
 
 
-def salvar_copy(texto: str, pilar: str, template: str, framework_legenda: str) -> str:
+def salvar_copy(texto: str, pilar: str, template: str, framework_legenda: str, tema: str, vies: str) -> str:
     hoje = date.today().isoformat()
     pasta = f"conteudo/posts-{hoje}"
     os.makedirs(pasta, exist_ok=True)
     caminho = f"{pasta}/copy.md"
-    cabecalho = f"<!-- pilar: {pilar} | template: {template} | framework_legenda: {framework_legenda} -->\n\n"
+    cabecalho = (
+        f"<!-- pilar: {pilar} | template: {template} | framework_legenda: {framework_legenda} "
+        f"| tema: {tema} | vies: {vies} -->\n\n"
+    )
     with open(caminho, "w", encoding="utf-8") as f:
         f.write(cabecalho + texto)
     return caminho
@@ -328,8 +392,10 @@ if __name__ == "__main__":
 
     copy_bruto = gerar_copy(secoes[pilar], template=template, pilar=pilar)
     copy_revisado = despersonalizar(copy_bruto)
-    framework_legenda, copy_final = _extrair_framework_escolhido(copy_revisado)
+    framework_legenda, copy_sem_framework = _extrair_framework_escolhido(copy_revisado)
+    tema, vies, copy_final = _extrair_tema_e_vies(copy_sem_framework)
     print(f"Framework da legenda escolhido pelo modelo: {framework_legenda}")
+    print(f"Tema: {tema} | Viés: {vies}")
 
-    caminho = salvar_copy(copy_final, pilar, template, framework_legenda)
+    caminho = salvar_copy(copy_final, pilar, template, framework_legenda, tema, vies)
     print(f"Copy salvo em: {caminho}")
