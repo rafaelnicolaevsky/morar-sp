@@ -360,7 +360,7 @@ def gerar_copy(pauta: str, template: str, pilar: str, tem_pauta: bool) -> str:
     mensagem = f"Pauta de hoje:\n\n{pauta}" if tem_pauta else "Gere o post evergreen (sem pauta do dia pra esse template)."
     resposta = client.messages.create(
         model=MODELO,
-        max_tokens=3000,
+        max_tokens=4000,
         system=_montar_prompt_sistema(template, pilar, tem_pauta),
         messages=[{"role": "user", "content": mensagem}],
     )
