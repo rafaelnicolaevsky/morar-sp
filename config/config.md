@@ -61,7 +61,19 @@ Fora do escopo por enquanto: construção/reforma/decoração.
   - Comparativo (ex: financiamento vs consórcio) — pilar compra/venda
   - Opinião de mercado (dado + leitura) — pilar investimento
   - "Descubra o bairro" (gancho de atração/evento → convite sutil a conhecer a região) — pilar atrações de bairro
+  - "Achado local" (destaque de um estabelecimento/lugar/evento específico do
+    bairro — ex.: hamburgueria com tema X atrai visitantes, promoção com
+    prazo numa churrascaria) — pilar atrações de bairro
+  - "Dica prática" (listicle evergreen, 3-5 dicas acionáveis — ex.: "5 dicas
+    pra negociar o preço de venda do seu imóvel", "como avaliar se seu
+    aluguel está caro") — pilares compra/venda e investimento. **Não
+    depende de pauta/notícia do dia** — mantém esses pilares disponíveis
+    mesmo em dias sem nada relevante na pesquisa
 - Estilo visual: **variado** (mistura editorial/dados, humor/meme, informativo) — sem fórmula fixa única
+- **SEO/algoritmo na legenda**: incluir naturalmente (nunca forçado) termos
+  de busca reais — tipo de imóvel + bairro/região + ação (ex.: "alugar
+  apartamento na Vila Mariana") — o Instagram indexa o texto da legenda pra
+  busca/recomendação, não só as hashtags
 - **Legenda (caption) com framework de copywriting rotativo** (não é só
   "1-2 frases", precisa ter substância real — ver `FRAMEWORK_LEGENDA_INSTRUCOES`
   em `scripts/02_gerar_copy.py`):
@@ -81,6 +93,17 @@ Fora do escopo por enquanto: construção/reforma/decoração.
   região/bairro, uma mais ampla sobre o nicho) — nunca 3 hashtags que
   dizem basicamente a mesma coisa (ex.: #ParqueDoCarmo #ParqueCarmoSP
   #ParqueDoCarmoSP é redundante, não variado).
+
+## Guardrail: não repetir tema+viés
+
+Todo post declara explicitamente um "Tema" (assunto central, pode se
+repetir ao longo do tempo — é normal um nicho ter temas recorrentes, tipo
+"valorização por transporte") e um "Viés" (o ângulo específico de hoje
+sobre esse tema — esse não pode repetir a combinação com o mesmo tema). O
+histórico fica em `logs/temas_publicados.json` (ver
+`scripts/utils/historico_temas.py`) e é injetado no prompt de geração pra
+evitar posts quase-duplicados (ex.: dois posts seguidos sobre "valorização
+por metrô" com o mesmo argumento).
 
 ## Regras de redação (obrigatórias)
 
