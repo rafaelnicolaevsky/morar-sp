@@ -10,17 +10,22 @@ name: publicar
 # do Garimpinhos: evitar gastar minutos do Actions à toa) — só instala
 # Playwright/etc. e roda o pipeline de verdade se o horário bater.
 # agendador.py só usa biblioteca padrão do Python.
+#
+# Horários adiantados em 1h em 02/08/2026 (pedido do usuário) — o
+# GitHub Actions atrasa gatilhos cron de forma imprevisível (~1h-1h45
+# observado no primeiro dia real). Aproveitado pra mover "14:50" pra
+# "13:55" (antes do adiantamento) — colidia com o garimpinhos.
 on:
   schedule:
-    - cron: "15 11 * * *"  # manhã 08:15 BRT
-    - cron: "0 12 * * *"   # manhã 09:00 BRT
-    - cron: "45 12 * * *"  # manhã 09:45 BRT
-    - cron: "0 17 * * *"   # tarde 14:00 BRT
-    - cron: "50 17 * * *"  # tarde 14:50 BRT
-    - cron: "40 18 * * *"  # tarde 15:40 BRT
-    - cron: "30 22 * * *"  # noite 19:30 BRT
-    - cron: "15 23 * * *"  # noite 20:15 BRT
-    - cron: "0 0 * * *"    # noite 21:00 BRT (00:00 UTC do dia seguinte)
+    - cron: "15 10 * * *"  # manhã 07:15 BRT
+    - cron: "0 11 * * *"   # manhã 08:00 BRT
+    - cron: "45 11 * * *"  # manhã 08:45 BRT
+    - cron: "0 16 * * *"   # tarde 13:00 BRT
+    - cron: "55 16 * * *"  # tarde 13:55 BRT
+    - cron: "40 17 * * *"  # tarde 14:40 BRT
+    - cron: "30 21 * * *"  # noite 18:30 BRT
+    - cron: "15 22 * * *"  # noite 19:15 BRT
+    - cron: "0 23 * * *"   # noite 20:00 BRT
   workflow_dispatch:
     inputs:
       turno:
@@ -56,15 +61,15 @@ jobs:
         id: decisao
         run: |
           case "${{ github.event.schedule }}" in
-            "15 11 * * *") TURNO=manha; HORARIO=08:15 ;;
-            "0 12 * * *")  TURNO=manha; HORARIO=09:00 ;;
-            "45 12 * * *") TURNO=manha; HORARIO=09:45 ;;
-            "0 17 * * *")  TURNO=tarde; HORARIO=14:00 ;;
-            "50 17 * * *") TURNO=tarde; HORARIO=14:50 ;;
-            "40 18 * * *") TURNO=tarde; HORARIO=15:40 ;;
-            "30 22 * * *") TURNO=noite; HORARIO=19:30 ;;
-            "15 23 * * *") TURNO=noite; HORARIO=20:15 ;;
-            "0 0 * * *")   TURNO=noite; HORARIO=21:00 ;;
+            "15 10 * * *") TURNO=manha; HORARIO=07:15 ;;
+            "0 11 * * *")  TURNO=manha; HORARIO=08:00 ;;
+            "45 11 * * *") TURNO=manha; HORARIO=08:45 ;;
+            "0 16 * * *")  TURNO=tarde; HORARIO=13:00 ;;
+            "55 16 * * *") TURNO=tarde; HORARIO=13:55 ;;
+            "40 17 * * *") TURNO=tarde; HORARIO=14:40 ;;
+            "30 21 * * *") TURNO=noite; HORARIO=18:30 ;;
+            "15 22 * * *") TURNO=noite; HORARIO=19:15 ;;
+            "0 23 * * *")  TURNO=noite; HORARIO=20:00 ;;
             *) TURNO="${{ inputs.turno }}"; HORARIO="${{ inputs.horario }}" ;;
           esac
           echo "turno=$TURNO" >> "$GITHUB_OUTPUT"
