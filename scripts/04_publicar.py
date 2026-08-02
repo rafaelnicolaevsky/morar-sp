@@ -8,12 +8,21 @@ Responsável por:
   público, não aceita upload de arquivo local) — ver utils/hospedagem_midia.py
 - Publicar via utils/api_instagram.py
 - Registrar o resultado em logs/publicacoes.md
+
+Se MODO_TESTE=true no .env, roda tudo igual (pesquisa, copy, visual) mas
+NÃO hospeda imagem no repo público, não chama a API do Instagram, não
+registra no histórico de temas e não marca ".publicado" — só imprime o
+que seria feito. Adicionado 01/08/2026 (migração pro GitHub Actions,
+mesmo padrão dos outros projetos da família) — sem isso não dava pra
+testar o pipeline sem publicar de verdade no Instagram.
 """
 
+import os
 import re
 import sys
-from datetime import date
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from scripts.utils.api_instagram import (
@@ -26,6 +35,10 @@ from scripts.utils.api_instagram import (
 from scripts.utils.data_brt import hoje_brt
 from scripts.utils.historico_temas import registrar_tema
 from scripts.utils.hospedagem_midia import publicar_imagens_no_repo_midia
+
+load_dotenv()
+
+MODO_TESTE = os.getenv("MODO_TESTE", "false").strip().lower() == "true"
 
 
 def ler_copy_do_dia() -> str:
@@ -92,6 +105,14 @@ if __name__ == "__main__":
     legenda = ler_legenda_do_dia(copy_md)
     cabecalho = ler_cabecalho_do_dia(copy_md)
     caminhos_imagens = listar_imagens_do_dia()
+
+    if MODO_TESTE:
+        print("MODO_TESTE ativo — não vai publicar de verdade, hospedar imagem nem marcar histórico.")
+        print(f"Pilar: {cabecalho['pilar']} | Tema: {cabecalho['tema']} | Viés: {cabecalho['vies']}")
+        print(f"Categoria: {cabecalho['categoria']} | Viés estrutural: {cabecalho['vies_estrutural']} | Bairro-alvo: {cabecalho['bairro_alvo']}")
+        print(f"Imagens ({len(caminhos_imagens)}): {caminhos_imagens}")
+        print(f"Legenda:\n{legenda}")
+        sys.exit(0)
 
     print(f"Hospedando {len(caminhos_imagens)} imagem(ns) no repo morar-sp-midia...")
     imagens_urls = publicar_imagens_no_repo_midia(caminhos_imagens)

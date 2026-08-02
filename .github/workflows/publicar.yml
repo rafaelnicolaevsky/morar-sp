@@ -33,6 +33,10 @@ on:
         description: "true = ignora a checagem de turno/horário e roda o pipeline direto (útil pra teste)"
         required: false
         default: "false"
+      modo_teste:
+        description: "true = não publica de verdade"
+        required: false
+        default: "false"
 
 permissions:
   contents: write
@@ -97,6 +101,7 @@ jobs:
           UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
           MIDIA_REPO_PATH: ../morar-sp-midia
           GIT_USER_EMAIL: ${{ secrets.MORARSP_GIT_EMAIL }}
+          MODO_TESTE: ${{ inputs.modo_teste || 'false' }}
         run: python scripts/agendador.py "${{ steps.decisao.outputs.turno }}" "${{ steps.decisao.outputs.horario }}"
 
       - name: Commitar log e histórico
