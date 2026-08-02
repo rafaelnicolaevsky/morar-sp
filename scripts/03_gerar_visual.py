@@ -70,17 +70,44 @@ from scripts.utils.regiao import carregar_regiao_foco
 LARGURA_CANVAS = 1080
 ALTURA_CANVAS = 1350
 
-CORES_POR_PILAR = {
-    "atracao": "tema-verde",
-    "compra_venda": "tema-azul",
-    "investimento": "tema-laranja",
+# Cor e eyebrow por CATEGORIA (pilar "atracao") ou por PILAR (imóveis) —
+# pedido do usuário, 01/08/2026: cada categoria de atração tem sua própria
+# cor (não mais um verde único genérico pro pilar inteiro).
+TEMA_POR_CATEGORIA = {
+    "gastronomia": "tema-gastronomia",
+    "entretenimento": "tema-entretenimento",
+    "cultura": "tema-cultura",
+    "lazer": "tema-lazer",
+    "festivais": "tema-festivais",
+}
+TEMA_POR_PILAR = {
+    "compra_venda": "tema-compra-venda",
+    "investimento": "tema-investimento",
 }
 
+EYEBROW_POR_CATEGORIA = {
+    "gastronomia": "Gastronomia",
+    "entretenimento": "Entretenimento",
+    "cultura": "Cultura",
+    "lazer": "Lazer",
+    "festivais": "Festivais",
+}
 EYEBROW_POR_PILAR = {
-    "atracao": "Atrações de bairro",
     "compra_venda": "Compra e venda",
     "investimento": "Investimento",
 }
+
+
+def tema_e_eyebrow(dados_copy: dict) -> tuple[str, str]:
+    """Resolve a classe de tema (cor) e o texto do eyebrow — por categoria no pilar 'atracao', por pilar nos demais."""
+    pilar = dados_copy["pilar"]
+    if pilar == "atracao":
+        categoria = dados_copy.get("categoria") or ""
+        return (
+            TEMA_POR_CATEGORIA.get(categoria, "tema-cultura"),
+            EYEBROW_POR_CATEGORIA.get(categoria, "Atrações de bairro"),
+        )
+    return TEMA_POR_PILAR.get(pilar, "tema-compra-venda"), EYEBROW_POR_PILAR.get(pilar, pilar)
 
 CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@800&family=Stack+Sans+Text:wght@200;400&display=swap');
@@ -90,9 +117,13 @@ CSS = """
 :root {
   --cream: #F2DFC5;
   --dark-gray: #3E4247;
-  --blue-dark: #3B76C0;
-  --green-dark: #6C8A1F;
-  --orange-dark: #E8611F;
+  --cor-gastronomia: #FFD738;
+  --cor-entretenimento: #FF8138;
+  --cor-cultura: #21ED98;
+  --cor-lazer: #B9FF38;
+  --cor-festivais: #FF4561;
+  --cor-compra-venda: #6738FF;
+  --cor-investimento: #FF38E4;
 }
 
 body { font-family: 'Stack Sans Text', sans-serif; }
@@ -125,9 +156,13 @@ body { font-family: 'Stack Sans Text', sans-serif; }
   padding: 48px;
   border-radius: 28px;
 }
-.slide.tema-verde.tem-foto.overlay-box .conteudo { background: rgba(108, 138, 31, 0.85); }
-.slide.tema-azul.tem-foto.overlay-box .conteudo { background: rgba(59, 118, 192, 0.85); }
-.slide.tema-laranja.tem-foto.overlay-box .conteudo { background: rgba(232, 97, 31, 0.85); }
+.slide.tema-gastronomia.tem-foto.overlay-box .conteudo { background: rgba(255, 215, 56, 0.85); }
+.slide.tema-entretenimento.tem-foto.overlay-box .conteudo { background: rgba(255, 129, 56, 0.85); }
+.slide.tema-cultura.tem-foto.overlay-box .conteudo { background: rgba(33, 237, 152, 0.85); }
+.slide.tema-lazer.tem-foto.overlay-box .conteudo { background: rgba(185, 255, 56, 0.85); }
+.slide.tema-festivais.tem-foto.overlay-box .conteudo { background: rgba(255, 69, 97, 0.85); }
+.slide.tema-compra-venda.tem-foto.overlay-box .conteudo { background: rgba(103, 56, 255, 0.85); }
+.slide.tema-investimento.tem-foto.overlay-box .conteudo { background: rgba(255, 56, 228, 0.85); }
 
 /* Modo "cheio": cor do pilar (85%) cobrindo o slide inteiro, sem cartão. */
 .slide.tem-foto.overlay-cheio::before {
@@ -136,9 +171,13 @@ body { font-family: 'Stack Sans Text', sans-serif; }
   inset: 0;
   z-index: 0;
 }
-.slide.tema-verde.tem-foto.overlay-cheio::before { background: rgba(108, 138, 31, 0.85); }
-.slide.tema-azul.tem-foto.overlay-cheio::before { background: rgba(59, 118, 192, 0.85); }
-.slide.tema-laranja.tem-foto.overlay-cheio::before { background: rgba(232, 97, 31, 0.85); }
+.slide.tema-gastronomia.tem-foto.overlay-cheio::before { background: rgba(255, 215, 56, 0.85); }
+.slide.tema-entretenimento.tem-foto.overlay-cheio::before { background: rgba(255, 129, 56, 0.85); }
+.slide.tema-cultura.tem-foto.overlay-cheio::before { background: rgba(33, 237, 152, 0.85); }
+.slide.tema-lazer.tem-foto.overlay-cheio::before { background: rgba(185, 255, 56, 0.85); }
+.slide.tema-festivais.tem-foto.overlay-cheio::before { background: rgba(255, 69, 97, 0.85); }
+.slide.tema-compra-venda.tem-foto.overlay-cheio::before { background: rgba(103, 56, 255, 0.85); }
+.slide.tema-investimento.tem-foto.overlay-cheio::before { background: rgba(255, 56, 228, 0.85); }
 .slide.tem-foto.overlay-cheio .conteudo { position: relative; z-index: 1; }
 .slide.tem-foto.overlay-cheio .metade-inferior { z-index: 1; }
 .slide.tem-foto.overlay-cheio .footer { z-index: 1; }
@@ -173,9 +212,13 @@ body { font-family: 'Stack Sans Text', sans-serif; }
 /* Modo "sólido": sem foto nenhuma, fundo 100% na cor do pilar — usado pra
    alternar com os cards com foto no carrossel, pra não repetir a mesma
    imagem em todos os cards (capa nunca usa esse modo). */
-.slide.solido.tema-verde { background: var(--green-dark); }
-.slide.solido.tema-azul { background: var(--blue-dark); }
-.slide.solido.tema-laranja { background: var(--orange-dark); }
+.slide.solido.tema-gastronomia { background: var(--cor-gastronomia); }
+.slide.solido.tema-entretenimento { background: var(--cor-entretenimento); }
+.slide.solido.tema-cultura { background: var(--cor-cultura); }
+.slide.solido.tema-lazer { background: var(--cor-lazer); }
+.slide.solido.tema-festivais { background: var(--cor-festivais); }
+.slide.solido.tema-compra-venda { background: var(--cor-compra-venda); }
+.slide.solido.tema-investimento { background: var(--cor-investimento); }
 .slide.solido h1,
 .slide.solido p,
 .slide.solido .footer {
@@ -185,6 +228,15 @@ body { font-family: 'Stack Sans Text', sans-serif; }
 .slide.solido .eyebrow {
   background: transparent;
   border: 2px solid #FFFFFF;
+}
+/* Mesmo ajuste de contraste do eyebrow (fundos claros), agora pro modo
+   sólido inteiro — texto branco não lê em cima de amarelo/verde-limão. */
+.slide.solido.tema-gastronomia h1, .slide.solido.tema-gastronomia p, .slide.solido.tema-gastronomia .footer, .slide.solido.tema-gastronomia .eyebrow,
+.slide.solido.tema-entretenimento h1, .slide.solido.tema-entretenimento p, .slide.solido.tema-entretenimento .footer, .slide.solido.tema-entretenimento .eyebrow,
+.slide.solido.tema-cultura h1, .slide.solido.tema-cultura p, .slide.solido.tema-cultura .footer, .slide.solido.tema-cultura .eyebrow,
+.slide.solido.tema-lazer h1, .slide.solido.tema-lazer p, .slide.solido.tema-lazer .footer, .slide.solido.tema-lazer .eyebrow {
+  color: var(--dark-gray);
+  border-color: var(--dark-gray);
 }
 
 .slide.alinhado-esquerda {
@@ -272,9 +324,13 @@ p {
      pedido do usuário, 01/08/2026. */
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
 }
-.tema-verde .destaque { color: var(--green-dark); }
-.tema-azul .destaque { color: var(--blue-dark); }
-.tema-laranja .destaque { color: var(--orange-dark); }
+.tema-gastronomia .destaque { color: var(--cor-gastronomia); }
+.tema-entretenimento .destaque { color: var(--cor-entretenimento); }
+.tema-cultura .destaque { color: var(--cor-cultura); }
+.tema-lazer .destaque { color: var(--cor-lazer); }
+.tema-festivais .destaque { color: var(--cor-festivais); }
+.tema-compra-venda .destaque { color: var(--cor-compra-venda); }
+.tema-investimento .destaque { color: var(--cor-investimento); }
 
 .footer {
   position: absolute;
@@ -290,9 +346,25 @@ p {
 .footer.alinhado-esquerda { text-align: left; }
 .footer.alinhado-centro { text-align: center; }
 
-.tema-verde .eyebrow { background: var(--green-dark); }
-.tema-azul .eyebrow { background: var(--blue-dark); }
-.tema-laranja .eyebrow { background: var(--orange-dark); }
+.tema-gastronomia .eyebrow { background: var(--cor-gastronomia); }
+.tema-entretenimento .eyebrow { background: var(--cor-entretenimento); }
+.tema-cultura .eyebrow { background: var(--cor-cultura); }
+.tema-lazer .eyebrow { background: var(--cor-lazer); }
+.tema-festivais .eyebrow { background: var(--cor-festivais); }
+.tema-compra-venda .eyebrow { background: var(--cor-compra-venda); }
+.tema-investimento .eyebrow { background: var(--cor-investimento); }
+
+/* Fundos claros (amarelo/verde-limão) não têm contraste suficiente com
+   texto branco no eyebrow — troca pra escuro nessas categorias (medido
+   por luminância, achado real, 01/08/2026). Festivais (#FF4561) e os 2
+   pilares de imóveis (roxo/magenta) são escuros o bastante, mantêm branco. */
+.tema-gastronomia .eyebrow,
+.tema-entretenimento .eyebrow,
+.tema-cultura .eyebrow,
+.tema-lazer .eyebrow {
+  color: var(--dark-gray);
+  text-shadow: none;
+}
 """
 
 # JS injetado uma vez na página: quebra de linha de título E do corpo
@@ -475,6 +547,9 @@ def parse_copy(copy_md: str) -> dict:
     destaque_match = re.search(r"destaque_titulo:\s*(.*?)\s*-->", copy_md)
     destaque_titulo = destaque_match.group(1) if destaque_match else ""
 
+    categoria_match = re.search(r"categoria:\s*(.*?)\s*\|", copy_md)
+    categoria = categoria_match.group(1) if categoria_match else ""
+
     titulo_match = re.search(r"(?m)^# (.+)$", copy_md)
     titulo = titulo_match.group(1).strip() if titulo_match else ""
 
@@ -504,7 +579,7 @@ def parse_copy(copy_md: str) -> dict:
     return {
         "pilar": pilar, "titulo": titulo, "slides": slides,
         "legenda": legenda, "termo_imagem": termo_imagem, "formato": formato,
-        "destaque_titulo": destaque_titulo,
+        "destaque_titulo": destaque_titulo, "categoria": categoria,
     }
 
 
@@ -608,8 +683,7 @@ def gerar_carrossel(dados_copy: dict, estilo: str, formato: str = "carrossel") -
     formato="carrossel": gera todos os slides. formato="imagem_unica": gera
     só a capa (título geral + corpo do slide 1), como post de imagem única.
     """
-    tema = CORES_POR_PILAR.get(dados_copy["pilar"], "tema-azul")
-    eyebrow = EYEBROW_POR_PILAR.get(dados_copy["pilar"], dados_copy["pilar"])
+    tema, eyebrow = tema_e_eyebrow(dados_copy)
     slides_a_gerar = dados_copy["slides"][:1] if formato == "imagem_unica" else dados_copy["slides"]
     total = len(slides_a_gerar)
 
