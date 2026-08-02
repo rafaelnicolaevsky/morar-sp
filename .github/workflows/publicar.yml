@@ -1,0 +1,121 @@
+name: publicar
+
+# 9 horários candidatos (3 por turno x 3 turnos, todos em UTC = BRT + 3h),
+# migrado do Agendador de Tarefas do Windows (RandomDelay) em 01/08/2026.
+# scripts/agendador.py decide, de forma determinística por data (sem
+# arquivo de estado — cada run é uma máquina limpa), se hoje é a vez
+# desse turno e se esse é o horário sorteado do dia.
+#
+# A checagem roda ANTES de instalar qualquer dependência (mesmo padrão
+# do Garimpinhos: evitar gastar minutos do Actions à toa) — só instala
+# Playwright/etc. e roda o pipeline de verdade se o horário bater.
+# agendador.py só usa biblioteca padrão do Python.
+on:
+  schedule:
+    - cron: "15 11 * * *"  # manhã 08:15 BRT
+    - cron: "0 12 * * *"   # manhã 09:00 BRT
+    - cron: "45 12 * * *"  # manhã 09:45 BRT
+    - cron: "0 17 * * *"   # tarde 14:00 BRT
+    - cron: "50 17 * * *"  # tarde 14:50 BRT
+    - cron: "40 18 * * *"  # tarde 15:40 BRT
+    - cron: "30 22 * * *"  # noite 19:30 BRT
+    - cron: "15 23 * * *"  # noite 20:15 BRT
+    - cron: "0 0 * * *"    # noite 21:00 BRT (00:00 UTC do dia seguinte)
+  workflow_dispatch:
+    inputs:
+      turno:
+        description: "manha | tarde | noite"
+        required: true
+      horario:
+        description: "HH:MM (BRT)"
+        required: true
+      forcar:
+        description: "true = ignora a checagem de turno/horário e roda o pipeline direto (útil pra teste)"
+        required: false
+        default: "false"
+
+permissions:
+  contents: write
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Decidir se deve publicar (sem instalar dependências)
+        id: decisao
+        run: |
+          case "${{ github.event.schedule }}" in
+            "15 11 * * *") TURNO=manha; HORARIO=08:15 ;;
+            "0 12 * * *")  TURNO=manha; HORARIO=09:00 ;;
+            "45 12 * * *") TURNO=manha; HORARIO=09:45 ;;
+            "0 17 * * *")  TURNO=tarde; HORARIO=14:00 ;;
+            "50 17 * * *") TURNO=tarde; HORARIO=14:50 ;;
+            "40 18 * * *") TURNO=tarde; HORARIO=15:40 ;;
+            "30 22 * * *") TURNO=noite; HORARIO=19:30 ;;
+            "15 23 * * *") TURNO=noite; HORARIO=20:15 ;;
+            "0 0 * * *")   TURNO=noite; HORARIO=21:00 ;;
+            *) TURNO="${{ inputs.turno }}"; HORARIO="${{ inputs.horario }}" ;;
+          esac
+          echo "turno=$TURNO" >> "$GITHUB_OUTPUT"
+          echo "horario=$HORARIO" >> "$GITHUB_OUTPUT"
+
+          if [ "${{ inputs.forcar }}" = "true" ]; then
+            echo "deve_publicar=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          export TURNO HORARIO
+          RESULTADO=$(cd scripts && python3 _ci_checar_horario.py)
+          echo "deve_publicar=$RESULTADO" >> "$GITHUB_OUTPUT"
+          echo "Turno=$TURNO Horario=$HORARIO Deve publicar=$RESULTADO"
+
+      - name: Instalar dependências
+        if: steps.decisao.outputs.deve_publicar == 'true'
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Clonar repositório de mídia
+        if: steps.decisao.outputs.deve_publicar == 'true'
+        run: |
+          git clone https://x-access-token:${{ secrets.MIDIA_REPO_TOKEN }}@github.com/rafaelnicolaevsky/morar-sp-midia.git ../morar-sp-midia
+
+      - name: Rodar pipeline
+        if: steps.decisao.outputs.deve_publicar == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          INSTAGRAM_ACCOUNT_ID: ${{ secrets.INSTAGRAM_ACCOUNT_ID }}
+          INSTAGRAM_APP_ID: ${{ secrets.INSTAGRAM_APP_ID }}
+          UNSPLASH_ACCESS_KEY: ${{ secrets.UNSPLASH_ACCESS_KEY }}
+          MIDIA_REPO_PATH: ../morar-sp-midia
+          GIT_USER_EMAIL: ${{ secrets.MORARSP_GIT_EMAIL }}
+        run: python scripts/agendador.py "${{ steps.decisao.outputs.turno }}" "${{ steps.decisao.outputs.horario }}"
+
+      - name: Commitar log e histórico
+        if: always() && steps.decisao.outputs.deve_publicar == 'true'
+        run: |
+          git add -f logs/publicacoes.md logs/temas_publicados.json config/regiao_foco.json 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "Nada pra commitar."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "Log de publicação automática"
+          for tentativa in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "Push rejeitado (tentativa $tentativa) -- tentando de novo..."
+            git pull --rebase origin main
+          done
+          echo "Push falhou depois de 3 tentativas."
+          exit 1

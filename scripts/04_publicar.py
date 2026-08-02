@@ -81,6 +81,7 @@ def listar_imagens_do_dia() -> list[str]:
 
 def registrar_log(resultado: dict) -> None:
     hoje = date.today().isoformat()
+    Path("logs").mkdir(parents=True, exist_ok=True)
     with open("logs/publicacoes.md", "a", encoding="utf-8") as f:
         f.write(f"\n## {hoje}\n{resultado}\n")
 

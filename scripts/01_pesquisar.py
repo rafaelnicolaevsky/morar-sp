@@ -204,6 +204,7 @@ def pesquisar_tendencias(pauta: dict) -> str:
 def salvar_pesquisa(conteudo: str) -> str:
     """Salva o resultado da pesquisa em pesquisa/tendencias-YYYY-MM-DD.md"""
     hoje = date.today().isoformat()
+    Path("pesquisa").mkdir(parents=True, exist_ok=True)
     caminho = f"pesquisa/tendencias-{hoje}.md"
     with open(caminho, "w", encoding="utf-8") as f:
         f.write(conteudo)

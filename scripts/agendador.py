@@ -1,36 +1,59 @@
 """
-Agendador: decide se o turno atual deve publicar hoje.
+Agendador: decide se o turno/horário atual deve publicar hoje.
 
 Regras (definidas com o usuário):
 - Ciclo de quantidade por dia: 2, 1, 2, 1, 2, 1... (nunca muda de ordem)
 - 3 turnos possíveis: manhã, tarde, noite
 - A cada dia, sorteia quais turnos publicam (respeitando a quantidade do
   ciclo), evitando repetir o(s) turno(s) usado(s) no dia anterior
-- A variação de horário DENTRO de cada turno é responsabilidade das
-  próprias tarefas do Agendador de Tarefas do Windows (RandomDelay) — este
-  script só decide "publica ou não" pro turno que o chamou
+- Horário exato dentro de cada turno: sorteado entre 3 candidatos fixos
+  por turno (ver HORARIOS_POR_TURNO) — migrado de RandomDelay do Windows
+  Task Scheduler (01/08/2026, mudança pro GitHub Actions, que não tem
+  equivalente nativo de "atraso aleatório").
 
-Rodado 3x ao dia pelo Agendador de Tarefas do Windows, uma vez por turno:
-    python scripts/agendador.py manha
-    python scripts/agendador.py tarde
-    python scripts/agendador.py noite
+Determinístico por data (semente = a própria data), não mais um arquivo
+de estado persistido (config/agenda_estado.json) — pedido implícito da
+migração pro GitHub Actions: cada disparo roda numa máquina limpa, sem
+estado compartilhado entre execuções, então o plano do dia (e do dia
+anterior, pra excluir o turno de ontem) precisa ser recalculável puro a
+partir da data, sem depender de arquivo nenhum. A exclusão de "turno de
+ontem" recalcula o plano de ontem com a MESMA função (profundidade
+máxima 1 — o ciclo 2-1-2-1 nunca tem dois dias de 1 post seguidos).
 
-Se o turno chamado não estiver no plano de hoje, encerra sem fazer nada.
-Se estiver, roda o pipeline completo (00 a 04).
+Cada um dos 9 horários (3 turnos x 3 candidatos) é uma tarefa separada
+no Agendador de Tarefas do Windows / GitHub Actions:
+    python scripts/agendador.py manha 08:15
+    python scripts/agendador.py manha 09:00
+    python scripts/agendador.py manha 09:45
+    python scripts/agendador.py tarde 14:00
+    python scripts/agendador.py tarde 14:50
+    python scripts/agendador.py tarde 15:40
+    python scripts/agendador.py noite 19:30
+    python scripts/agendador.py noite 20:15
+    python scripts/agendador.py noite 21:00
+
+Se o turno não estiver no plano de hoje, ou o horário não for o sorteado
+pra esse turno hoje, encerra sem fazer nada.
 """
 
-import json
 import random
 import subprocess
 import sys
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-CAMINHO_ESTADO = RAIZ / "config" / "agenda_estado.json"
 
 TURNOS = ["manha", "tarde", "noite"]
-DATA_EPOCA = date(2026, 7, 27)  # dia 1 do ciclo (2 posts) — hoje (26/07) já foi publicado manualmente
+DATA_EPOCA = date(2026, 7, 27)  # dia 1 do ciclo (2 posts)
+
+# Candidatos fixos por turno — migrados das janelas reais de RandomDelay
+# do Windows (manhã 08:00-10:25, tarde 13:45-16:10, noite 19:15-21:25).
+HORARIOS_POR_TURNO = {
+    "manha": ["08:15", "09:00", "09:45"],
+    "tarde": ["14:00", "14:50", "15:40"],
+    "noite": ["19:30", "20:15", "21:00"],
+}
 
 ETAPAS_PIPELINE = [
     "scripts/00_selecionar_regiao.py",
@@ -41,55 +64,31 @@ ETAPAS_PIPELINE = [
 ]
 
 
-def _quantidade_do_dia(hoje: date) -> int:
+def _quantidade_do_dia(dia: date) -> int:
     """Ciclo 2-1-2-1... a partir da DATA_EPOCA (dia 0 = 2 posts, dia 1 = 1 post, ...)."""
-    dias_desde_epoca = (hoje - DATA_EPOCA).days
+    dias_desde_epoca = (dia - DATA_EPOCA).days
     return 2 if dias_desde_epoca % 2 == 0 else 1
 
 
-def _carregar_estado() -> dict | None:
-    if not CAMINHO_ESTADO.exists():
-        return None
-    with open(CAMINHO_ESTADO, encoding="utf-8") as f:
-        return json.load(f)
-
-
-def _salvar_estado(estado: dict) -> None:
-    CAMINHO_ESTADO.parent.mkdir(parents=True, exist_ok=True)
-    with open(CAMINHO_ESTADO, "w", encoding="utf-8") as f:
-        json.dump(estado, f, ensure_ascii=False, indent=2)
-
-
-def plano_de_hoje(hoje: date) -> dict:
-    """Retorna o plano de turnos de hoje, calculando (e persistindo) na primeira chamada do dia."""
-    estado_anterior = _carregar_estado()
-    if estado_anterior and estado_anterior.get("data") == hoje.isoformat():
-        return estado_anterior
-
-    quantidade = _quantidade_do_dia(hoje)
-    turnos_ontem = set(estado_anterior.get("turnos", [])) if estado_anterior else set()
+def plano_de_hoje(dia: date) -> dict:
+    """Plano determinístico de turnos+horários pra uma data — semente = a própria data."""
+    rnd = random.Random(f"plano-morarsp-{dia.isoformat()}")
+    quantidade = _quantidade_do_dia(dia)
 
     # A exclusão de "turno de ontem" só é matematicamente possível (e faz
     # sentido) em dias de 1 post: excluir até 2 turnos de um total de 3
-    # ainda deixa 1 candidato válido. Em dias de 2 posts, excluir os 2
-    # turnos de ontem deixaria só 1 candidato pra preencher 2 vagas — o que
-    # forçaria reincluir os mesmos turnos excluídos, virando um padrão fixo
-    # e previsível (o oposto do que "variar" pede). Por isso, dias de 2
-    # posts sorteiam livremente entre os 3 turnos, sem exclusão.
+    # ainda deixa 1 candidato válido. Em dias de 2 posts, sorteia livremente
+    # entre os 3 turnos, sem exclusão (ver histórico do projeto).
     if quantidade == 1:
+        turnos_ontem = set(plano_de_hoje(dia - timedelta(days=1))["turnos"])
         candidatos = [t for t in TURNOS if t not in turnos_ontem] or TURNOS[:]
-        turnos_hoje = [random.choice(candidatos)]
+        turnos_hoje = [rnd.choice(candidatos)]
     else:
-        turnos_hoje = random.sample(TURNOS, quantidade)
+        turnos_hoje = rnd.sample(TURNOS, quantidade)
 
-    novo_estado = {
-        "data": hoje.isoformat(),
-        "quantidade": quantidade,
-        "turnos": turnos_hoje,
-        "turnos_publicados": [],
-    }
-    _salvar_estado(novo_estado)
-    return novo_estado
+    horarios_hoje = {turno: rnd.choice(HORARIOS_POR_TURNO[turno]) for turno in turnos_hoje}
+
+    return {"data": dia.isoformat(), "quantidade": quantidade, "turnos": turnos_hoje, "horarios": horarios_hoje}
 
 
 def rodar_pipeline() -> None:
@@ -102,24 +101,24 @@ def rodar_pipeline() -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2 or sys.argv[1] not in TURNOS:
-        print(f"Uso: python agendador.py <{'|'.join(TURNOS)}>")
+    if len(sys.argv) < 3 or sys.argv[1] not in TURNOS:
+        print(f"Uso: python agendador.py <{'|'.join(TURNOS)}> <HH:MM>")
         sys.exit(1)
 
-    turno_atual = sys.argv[1]
+    turno_atual, horario_atual = sys.argv[1], sys.argv[2]
     hoje = date.today()
     plano = plano_de_hoje(hoje)
 
-    print(f"Plano de hoje ({hoje}): {plano['quantidade']} post(s), turnos: {plano['turnos']}")
+    print(f"Plano de hoje ({hoje}): {plano['quantidade']} post(s), turnos: {plano['turnos']}, horarios: {plano['horarios']}")
 
     if turno_atual not in plano["turnos"]:
         print(f"Turno '{turno_atual}' não está no plano de hoje. Encerrando sem publicar.")
         sys.exit(0)
 
-    print(f"Turno '{turno_atual}' confirmado. Rodando o pipeline...")
-    rodar_pipeline()
+    if plano["horarios"].get(turno_atual) != horario_atual:
+        print(f"Horário sorteado hoje pro turno '{turno_atual}' é {plano['horarios'].get(turno_atual)}, não {horario_atual}. Encerrando.")
+        sys.exit(0)
 
-    estado = _carregar_estado()
-    estado["turnos_publicados"].append(turno_atual)
-    _salvar_estado(estado)
+    print(f"Turno '{turno_atual}' às {horario_atual} confirmado. Rodando o pipeline...")
+    rodar_pipeline()
     print(f"Turno '{turno_atual}' concluído.")
