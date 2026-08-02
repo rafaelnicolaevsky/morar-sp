@@ -21,14 +21,21 @@ PAUSA_ENTRE_TENTATIVAS = 5  # segundos
 MIDIA_REPO_PATH = Path(os.getenv("MIDIA_REPO_PATH", "../morar-sp-midia")).resolve()
 MIDIA_REPO_URL_RAW = "https://raw.githubusercontent.com/rafaelnicolaevsky/morar-sp-midia/main"
 
-GIT_USER_NAME = "rafaelnicolaevsky"
-GIT_USER_EMAIL = "[email removido]"
+GIT_USER_NAME = os.getenv("GIT_USER_NAME", "rafaelnicolaevsky")
+GIT_USER_EMAIL = os.getenv("GIT_USER_EMAIL", "")
+if not GIT_USER_EMAIL:
+    raise RuntimeError("GIT_USER_EMAIL não definido (.env local ou secret no CI).")
 
 
 def _rodar_git(args: list[str]) -> str:
     resultado = subprocess.run(
         ["git", "-c", f"user.name={GIT_USER_NAME}", "-c", f"user.email={GIT_USER_EMAIL}", *args],
         cwd=MIDIA_REPO_PATH, capture_output=True, text=True,
+        # Sem isso, o Windows abre uma janela de console nova só pro git
+        # quando chamado a partir de um processo sem console — achado
+        # real, 31/07/2026 (visível sob login Interactive, invisível mas
+        # ainda desnecessário sob S4U).
+        creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
     )
     saida = resultado.stdout + resultado.stderr
     if resultado.returncode != 0 and "nothing to commit" not in saida:
