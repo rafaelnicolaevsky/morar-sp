@@ -7,7 +7,9 @@ Responsável por:
 - Salvar em conteudo/posts-YYYY-MM-DD/carrossel/slide-N.png
 
 Identidade visual (aprovada em revisão de design, ver histórico do projeto):
-- Fontes: Stack Sans Headline (títulos, peso 700) e Stack Sans Text (corpo, peso 200)
+- Fontes: Big Shoulders (títulos, peso 800 — trocado de Stack Sans Headline em
+  01/08/2026, aprovado pelo usuário entre 3 propostas testadas) e Stack Sans
+  Text (corpo, peso 200 — sem mudança)
 - Paleta: fundo creme, texto cinza-escuro, cor de destaque por pilar
   (atrações de bairro = verde, compra/venda = azul, investimento = laranja)
 - Eyebrow: pill com fundo na cor do pilar, texto branco, 12pt
@@ -61,6 +63,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.utils.formato import escolher_formato_post
 from scripts.utils.imagens_fundo import buscar_foto_de_fundo
 from scripts.utils.regiao import carregar_regiao_foco
 
@@ -80,7 +83,7 @@ EYEBROW_POR_PILAR = {
 }
 
 CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Stack+Sans+Headline:wght@700&family=Stack+Sans+Text:wght@200;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@800&family=Stack+Sans+Text:wght@200;400&display=swap');
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -140,14 +143,19 @@ body { font-family: 'Stack Sans Text', sans-serif; }
 .slide.tem-foto.overlay-cheio .metade-inferior { z-index: 1; }
 .slide.tem-foto.overlay-cheio .footer { z-index: 1; }
 
-/* Modo "gradiente": preto em gradiente (fixo em 75% embaixo, nunca 100%,
-   até 0% em cima), sem blur — a foto fica nítida no topo e esmaece pra
-   onde o texto está. */
+/* Modo "gradiente": preto em gradiente (85% embaixo, nunca 100%,
+   sustentado até 45% de altura, só depois esmaecendo pra 0% no topo) —
+   achado real: título de 3-4 linhas em imagem única alcança bem acima da
+   metade da peça, e um fade linear simples (0%->100%) já ficava fraco
+   demais na parte de cima do título sobre fotos com muito detalhe claro
+   (ex.: papel/gráficos). Segurar a opacidade por mais altura garante
+   contraste em qualquer quantidade de linhas do título, sem escurecer o
+   topo da foto (que continua visível/nítido). */
 .slide.tem-foto.overlay-gradiente::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0) 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.85) 45%, rgba(0, 0, 0, 0) 100%);
   z-index: 0;
 }
 .slide.tem-foto.overlay-gradiente .conteudo { position: relative; z-index: 1; }
@@ -160,6 +168,23 @@ body { font-family: 'Stack Sans Text', sans-serif; }
 .slide.overlay-gradiente.alinhado-esquerda {
   justify-content: flex-end;
   padding-bottom: 220px;
+}
+
+/* Modo "sólido": sem foto nenhuma, fundo 100% na cor do pilar — usado pra
+   alternar com os cards com foto no carrossel, pra não repetir a mesma
+   imagem em todos os cards (capa nunca usa esse modo). */
+.slide.solido.tema-verde { background: var(--green-dark); }
+.slide.solido.tema-azul { background: var(--blue-dark); }
+.slide.solido.tema-laranja { background: var(--orange-dark); }
+.slide.solido h1,
+.slide.solido p,
+.slide.solido .footer {
+  color: #FFFFFF;
+}
+.slide.solido .footer { opacity: 0.95; }
+.slide.solido .eyebrow {
+  background: transparent;
+  border: 2px solid #FFFFFF;
 }
 
 .slide.alinhado-esquerda {
@@ -175,7 +200,10 @@ body { font-family: 'Stack Sans Text', sans-serif; }
   top: 50%;
   left: 80px;
   right: 80px;
-  bottom: 80px;
+  /* 150px (não 80px, igual ao .footer) — reserva uma faixa exclusiva pra
+     assinatura @morar_sp, senão o CTA podia colidir com ela quando o
+     conteúdo (título+corpo) crescia bastante (achado real, 01/08/2026). */
+  bottom: 150px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -198,10 +226,10 @@ body { font-family: 'Stack Sans Text', sans-serif; }
 }
 
 h1 {
-  font-family: 'Stack Sans Headline', sans-serif;
-  font-weight: 700;
-  font-size: 66.7px; /* 50pt */
-  line-height: 1.2;
+  font-family: 'Big Shoulders', sans-serif;
+  font-weight: 800;
+  font-size: 78px; /* medido empiricamente pra ocupar volume equivalente ao Stack Sans Headline com o mesmo texto */
+  line-height: 1.15;
   margin-bottom: 44px;
   color: var(--dark-gray);
 }
@@ -212,7 +240,41 @@ p {
   font-size: 24px; /* 18pt */
   line-height: 1.6;
   color: var(--dark-gray);
+  /* Espaço ANTES (do título) e DEPOIS (do CTA, quando houver, ou da
+     assinatura) iguais — pedido do usuário, 01/08/2026. margin-top bate
+     com o margin-bottom do h1 (colapsa sem mudar nada); margin-bottom
+     colapsa com o margin-top do .cta-legenda (24px) pro maior dos dois
+     (44px), equilibrando os dois lados do texto. */
+  margin-top: 44px;
+  margin-bottom: 44px;
 }
+
+.cta-legenda {
+  font-family: 'Stack Sans Text', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  /* margin-top ZERADO de propósito (não removido — sem isso herdava os
+     44px da regra genérica de "p", já que .cta-legenda também é uma tag
+     <p>). O espaço acima do CTA já vem do margin-bottom do corpo (44px,
+     mesmo valor do espaço abaixo do título) — somar os dois desequilibrava
+     (achado real, 01/08/2026). */
+  margin-top: 0;
+  margin-bottom: 24px;
+  letter-spacing: 0.02em;
+  display: inline-block;
+  padding: 12px 20px;
+  border: 2px solid currentColor;
+  border-radius: 16px;
+}
+
+.destaque {
+  /* Palavra(s) mais importante(s) do título, na cor do eyebrow/categoria —
+     pedido do usuário, 01/08/2026. */
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+}
+.tema-verde .destaque { color: var(--green-dark); }
+.tema-azul .destaque { color: var(--blue-dark); }
+.tema-laranja .destaque { color: var(--orange-dark); }
 
 .footer {
   position: absolute;
@@ -233,11 +295,16 @@ p {
 .tema-laranja .eyebrow { background: var(--orange-dark); }
 """
 
-# JS injetado uma vez na página: quebra de linha de título.
-# - "esquerda": guloso por largura real, ate 4 palavras/linha
-# - "centro": balanceado por numero de caracteres, ate 6 palavras/linha,
-#   com fallback para o metodo guloso se o balanceamento nao couber na coluna
-# Ambos os caminhos corrigem "viuva" (ultima linha com 1 palavra so).
+# JS injetado uma vez na página: quebra de linha de título E do corpo
+# (pedido do usuário, 01/08/2026 — mesma regra pros dois).
+# - Quebra SEMPRE nos dois-pontos (":") primeiro — cada trecho separado por
+#   ":" vira seu próprio grupo de linhas, nunca misturado.
+# - Dentro de cada grupo: "esquerda" é guloso por largura real (até
+#   maxPalavrasPorLinha), "centro" é balanceado por número de caracteres
+#   (linhas com quantidade semelhante de palavras), com fallback pro guloso
+#   se o balanceamento não couber na coluna.
+# - Corrige "viúva" (última linha do grupo com 1 palavra só) dentro de cada
+#   grupo separadamente — nunca puxa palavra de um grupo pro outro.
 JS_QUEBRA_TITULO = r"""
 function __medirFabrica(el) {
   const cs = getComputedStyle(el);
@@ -291,9 +358,8 @@ function __quebraGulosa(palavras, medir, larguraMax, maxPalavrasPorLinha) {
   return linhas;
 }
 
-function __quebraBalanceada(palavras, maxPorLinha) {
+function __balancearEmNLinhas(palavras, numLinhas) {
   const n = palavras.length;
-  const numLinhas = Math.max(1, Math.ceil(n / maxPorLinha));
   const base = Math.floor(n / numLinhas);
   const extra = n % numLinhas;
   const fatiar = (tamanhos) => {
@@ -313,26 +379,72 @@ function __quebraBalanceada(palavras, maxPorLinha) {
   return melhor;
 }
 
-window.__quebrarTitulo = function (h1el, modo) {
-  const container = h1el.closest('.conteudo');
+// Acha o MENOR número de linhas (começando em 1) cuja divisão balanceada
+// cabe de verdade na largura disponível — em vez de um teto fixo de
+// palavras/linha, que quebrava em mais linhas do que o necessário (achado
+// real, 01/08/2026: um corpo de 18 palavras virou 3 linhas quando cabia
+// em 2). Sempre a divisão com quantidade mais parecida de palavras por
+// linha, pra esse número mínimo de linhas.
+function __quebraBalanceadaAuto(palavras, medir, larguraMax) {
+  for (let numLinhas = 1; numLinhas <= palavras.length; numLinhas++) {
+    const linhas = __balancearEmNLinhas(palavras, numLinhas);
+    if (linhas.every(l => medir(l.join(' ')) <= larguraMax)) return linhas;
+  }
+  return [palavras]; // não deveria chegar aqui
+}
+
+function __quebraBalanceada(palavras, maxPorLinha) {
+  const n = palavras.length;
+  const numLinhas = Math.max(1, Math.ceil(n / maxPorLinha));
+  const melhor = __balancearEmNLinhas(palavras, numLinhas);
+  return melhor;
+}
+
+window.__quebrarTexto = function (el, modo, maxPalavrasPorLinha) {
+  const container = el.closest('.conteudo') || el.parentElement;
   const estiloContainer = getComputedStyle(container);
   const paddingH = parseFloat(estiloContainer.paddingLeft) + parseFloat(estiloContainer.paddingRight);
   const larguraMax = container.getBoundingClientRect().width - paddingH;
-  const palavras = h1el.textContent.trim().split(/\s+/);
-  const { medir, limpar } = __medirFabrica(h1el);
+  const { medir, limpar } = __medirFabrica(el);
 
-  let linhas;
-  if (modo === 'centro') {
-    const balanceada = __quebraBalanceada(palavras, 6);
-    const cabemTodas = balanceada.every(l => medir(l.join(' ')) <= larguraMax);
-    linhas = cabemTodas ? balanceada : __quebraGulosa(palavras, medir, larguraMax, 6);
-  } else {
-    linhas = __quebraGulosa(palavras, medir, larguraMax, 4);
+  // Preserva qualquer <span class="destaque">...</span> já presente no HTML
+  // (palavra em destaque, ver 02_gerar_copy.py) — quebra pelo texto puro,
+  // depois reaplica o span nas palavras que originalmente estavam dentro dele.
+  const htmlOriginal = el.innerHTML;
+  const marcador = document.createElement('div');
+  marcador.innerHTML = htmlOriginal;
+  const palavrasDestaque = new Set(
+    Array.from(marcador.querySelectorAll('.destaque')).flatMap(s => s.textContent.trim().split(/\s+/))
+  );
+
+  // Quebra SEMPRE nos sinais de pontuação (dois-pontos, ponto, interrogação,
+  // exclamação, ponto-e-vírgula) primeiro — cada trecho vira um grupo
+  // independente de linhas, nunca mistura conteúdo de lados diferentes do
+  // sinal (pedido do usuário, 01/08/2026).
+  const grupos = el.textContent.trim().split(/(?<=[:.!?;])\s+/).filter(g => g.length > 0);
+
+  // Regra fixa (pedido do usuário, 01/08/2026): quebra em sinal + equilíbrio
+  // por número de linhas mínimo vale IGUAL pros dois alinhamentos —
+  // "centro" e "esquerda" só mudam o CSS de posição/texto, nunca a lógica
+  // de quebra de linha.
+  let todasLinhas = [];
+  for (const grupo of grupos) {
+    const palavras = grupo.trim().split(/\s+/);
+    let linhas = __quebraBalanceadaAuto(palavras, medir, larguraMax);
+    linhas = __corrigirViuva(linhas, medir, larguraMax);
+    todasLinhas.push(...linhas);
   }
-  linhas = __corrigirViuva(linhas, medir, larguraMax);
 
   limpar();
-  h1el.innerHTML = linhas.map(l => l.join(' ')).join('<br>');
+  el.innerHTML = todasLinhas.map(linha => linha.map(palavra => {
+    const limpa = palavra.replace(/[.,!?:;]+$/, '');
+    return palavrasDestaque.has(limpa) ? `<span class="destaque">${palavra}</span>` : palavra;
+  }).join(' ')).join('<br>');
+};
+
+// Compat: mantém o nome antigo, só pro título (4 esquerda / 6 centro palavras por linha).
+window.__quebrarTitulo = function (h1el, modo) {
+  window.__quebrarTexto(h1el, modo, modo === 'centro' ? 6 : 4);
 };
 """
 
@@ -352,6 +464,16 @@ def parse_copy(copy_md: str) -> dict:
     # "compra_venda", mesmo em posts de outros pilares).
     cabecalho = re.search(r"<!--\s*pilar:\s*(\w+)\s*\|\s*template:\s*(\w+)", copy_md)
     pilar = cabecalho.group(1) if cabecalho else "compra_venda"
+
+    # Formato decidido na etapa 2 (antes de gerar o copy, pra legenda já sair
+    # adequada) e salvo no cabeçalho. copy.md gerado antes desse campo existir
+    # não tem "formato:" — nesse caso, None sinaliza pro __main__ sortear como
+    # fallback (comportamento antigo).
+    formato_match = re.search(r"formato:\s*(\w+)", copy_md)
+    formato = formato_match.group(1) if formato_match else None
+
+    destaque_match = re.search(r"destaque_titulo:\s*(.*?)\s*-->", copy_md)
+    destaque_titulo = destaque_match.group(1) if destaque_match else ""
 
     titulo_match = re.search(r"(?m)^# (.+)$", copy_md)
     titulo = titulo_match.group(1).strip() if titulo_match else ""
@@ -381,7 +503,8 @@ def parse_copy(copy_md: str) -> dict:
 
     return {
         "pilar": pilar, "titulo": titulo, "slides": slides,
-        "legenda": legenda, "termo_imagem": termo_imagem,
+        "legenda": legenda, "termo_imagem": termo_imagem, "formato": formato,
+        "destaque_titulo": destaque_titulo,
     }
 
 
@@ -390,9 +513,18 @@ def escolher_estilo_visual() -> str:
     return random.choice(["esquerda", "centro"])
 
 
-def escolher_formato_post() -> str:
-    """Sorteia o formato do post do dia: carrossel ou imagem única (50/50)."""
-    return random.choice(["carrossel", "imagem_unica"])
+def _aplicar_destaque(titulo: str, destaque_titulo: str) -> str:
+    """
+    Envolve a(s) palavra(s) de destaque (ver '## Destaque do título' na
+    etapa 2) num <span class="destaque"> — pedido do usuário, 01/08/2026:
+    colorir a palavra mais importante do título na cor do eyebrow/pilar.
+    Match exato (case-sensitive, o prompt pede cópia literal); se não achar
+    a substring no título, devolve sem destaque (degradação graciosa, nunca
+    quebra o post por causa disso).
+    """
+    if not destaque_titulo or destaque_titulo not in titulo:
+        return titulo
+    return titulo.replace(destaque_titulo, f'<span class="destaque">{destaque_titulo}</span>', 1)
 
 
 def _markdown_basico_para_html(texto: str) -> str:
@@ -426,12 +558,17 @@ def _extrair_titulo_e_corpo(texto_slide: str) -> tuple[str, str]:
 
 def _montar_html_slide(tema: str, alinhamento: str, eyebrow: str, titulo: str, corpo: str,
                         mostrar_eyebrow: bool, mostrar_footer: bool, foto_url: str | None,
-                        modo_overlay: str) -> str:
+                        modo_overlay: str, mostrar_cta_legenda: bool = False,
+                        usar_foto: bool = True) -> str:
     bloco_eyebrow = f'<div class="eyebrow">{eyebrow}</div>' if mostrar_eyebrow else ""
     bloco_titulo = f"<h1>{titulo}</h1>" if titulo else ""
     corpo_html = _markdown_basico_para_html(corpo)
     bloco_corpo = f"<p>{corpo_html}</p>" if corpo.strip() else ""
-    conteudo = f'<div class="conteudo">{bloco_eyebrow}{bloco_titulo}{bloco_corpo}</div>'
+    # Post de imagem única: o resto do conteúdo só existe na legenda, então a
+    # capa precisa deixar isso explícito — sem esse aviso, quem vê o post não
+    # sabe que precisa abrir a legenda pra entender o assunto por completo.
+    bloco_cta_legenda = '<p class="cta-legenda">→ Continua na legenda</p>' if mostrar_cta_legenda else ""
+    conteudo = f'<div class="conteudo">{bloco_eyebrow}{bloco_titulo}{bloco_corpo}{bloco_cta_legenda}</div>'
 
     if alinhamento == "centro":
         corpo_slide = f'<div class="metade-inferior">{conteudo}</div>'
@@ -440,8 +577,18 @@ def _montar_html_slide(tema: str, alinhamento: str, eyebrow: str, titulo: str, c
 
     footer = f'<div class="footer alinhado-{alinhamento}">@morar_sp</div>' if mostrar_footer else ""
 
-    classe_foto = f" tem-foto overlay-{modo_overlay}" if foto_url else ""
-    estilo_foto = f' style="background-image: url(\'{foto_url}\');"' if foto_url else ""
+    # "solido" força fundo na cor do pilar mesmo com foto_url disponível —
+    # é o que permite alternar cards com foto e cards sem foto no mesmo
+    # carrossel (ver guardrail de legibilidade/repetição em config.md).
+    if foto_url and usar_foto:
+        classe_foto = f" tem-foto overlay-{modo_overlay}"
+        estilo_foto = f' style="background-image: url(\'{foto_url}\');"'
+    elif not foto_url:
+        classe_foto = ""
+        estilo_foto = ""
+    else:
+        classe_foto = " solido"
+        estilo_foto = ""
 
     return f"""<!doctype html>
 <html lang="pt-BR">
@@ -499,7 +646,7 @@ def gerar_carrossel(dados_copy: dict, estilo: str, formato: str = "carrossel") -
             eh_intermediario = not eh_primeiro and not eh_ultimo
 
             if eh_primeiro:
-                titulo_slide, corpo_slide = dados_copy["titulo"], texto_slide
+                titulo_slide, corpo_slide = _aplicar_destaque(dados_copy["titulo"], dados_copy["destaque_titulo"]), texto_slide
             else:  # intermediario ou ultimo (CTA) — ambos tem mini-titulo obrigatorio, corpo opcional
                 titulo_slide, corpo_slide = _extrair_titulo_e_corpo(texto_slide)
 
@@ -510,9 +657,18 @@ def gerar_carrossel(dados_copy: dict, estilo: str, formato: str = "carrossel") -
             else:
                 modo_overlay = random.choices(["gradiente", "box"], weights=[70, 30], k=1)[0]
 
+            # Capa sempre com foto (obrigatório). Demais cards alternam entre
+            # foto e sólido na cor do pilar (índice ímpar = foto, par =
+            # sólido) — pra não repetir a mesma imagem em todos os cards do
+            # carrossel (guardrail de legibilidade/repetição, config.md).
+            usar_foto = eh_primeiro or i % 2 == 1
+
+            mostrar_cta_legenda = eh_primeiro and formato == "imagem_unica"
+
             html = _montar_html_slide(
                 tema, estilo, eyebrow, titulo_slide, corpo_slide,
                 mostrar_eyebrow, mostrar_footer, foto_url, modo_overlay,
+                mostrar_cta_legenda, usar_foto,
             )
             pagina.set_content(html)
             pagina.wait_for_timeout(300)  # tempo pra fonte do Google Fonts carregar
@@ -520,7 +676,10 @@ def gerar_carrossel(dados_copy: dict, estilo: str, formato: str = "carrossel") -
             pagina.add_script_tag(content=JS_QUEBRA_TITULO)
             h1 = pagina.query_selector("h1")
             if h1:
-                h1.evaluate("(el, modo) => window.__quebrarTitulo(el, modo)", estilo)
+                h1.evaluate("(el, modo) => window.__quebrarTexto(el, modo, modo === 'centro' ? 6 : 4)", estilo)
+            corpo_p = pagina.query_selector("p:not(.cta-legenda)")
+            if corpo_p:
+                corpo_p.evaluate("(el, modo) => window.__quebrarTexto(el, modo, modo === 'centro' ? 8 : 6)", estilo)
 
             caminho = f"{pasta}/slide-{i}.png"
             pagina.query_selector(".slide").screenshot(path=caminho)
@@ -535,8 +694,10 @@ if __name__ == "__main__":
     copy_md = ler_copy_do_dia()
     dados_copy = parse_copy(copy_md)
     estilo = escolher_estilo_visual()
-    formato = escolher_formato_post()
-    print(f"Formato sorteado: {formato} | Estilo: {estilo} | Pilar: {dados_copy['pilar']}")
+    # Formato normalmente já vem decidido do cabeçalho (etapa 2, pra legenda
+    # sair adequada); só sorteia aqui como fallback pra copy.md antigo.
+    formato = dados_copy["formato"] or escolher_formato_post()
+    print(f"Formato: {formato} | Estilo: {estilo} | Pilar: {dados_copy['pilar']}")
 
     caminhos = gerar_carrossel(dados_copy, estilo, formato)
     print(f"Carrossel gerado: {caminhos}")

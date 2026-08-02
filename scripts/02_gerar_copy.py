@@ -24,13 +24,23 @@ import anthropic
 from dotenv import load_dotenv
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.utils.formato import escolher_formato_post
 from scripts.utils.historico_temas import temas_recentes_para_prompt
+from scripts.utils.selecao_pauta import carregar_ou_selecionar_pauta_do_dia
 
 load_dotenv()
 
 MODELO = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5")
+# Teto de output enxuto — o post inteiro (título + slides + legenda +
+# metadados) cabe bem dentro disso depois do corte de capa/slides
+# intermediários. thinking fica desligado nas duas chamadas (thinking vem
+# ligado por padrão na claude-sonnet-5 e consumiria esse teto sem gerar
+# texto de saída) — seguro aqui porque não há uso de tools, só texto.
+# 1024 truncou de verdade num teste real (seção "## Viés" cortada no meio);
+# 1536 dá a margem que faltava sem perder a economia (ainda ~98,8% menor
+# que o teto de 128000 tokens da API).
+MAX_TOKENS_TETO = 1536
 
-PESOS_PILARES = {"atracao": 50, "compra_venda": 25, "investimento": 25}
 TEMPLATES_POR_PILAR = {
     "atracao": ["descubra_bairro", "achado_local"],
     "compra_venda": ["voce_sabia", "comparativo", "dica_pratica"],
@@ -56,7 +66,10 @@ TEMPLATE_INSTRUCOES = {
     "opiniao_de_mercado": (
         "Formato opinião de mercado: apresenta um dado/tendência recente do setor "
         "e uma leitura do que isso significa pro público. Framing informativo, "
-        "nunca recomendação de investimento."
+        "nunca recomendação de investimento. Se o dado/gancho vier de outra cidade "
+        "(ex.: um dado do Rio de Janeiro), use só como abertura rápida — o grosso "
+        "do post (a maioria dos slides e a conclusão) precisa ser sobre o "
+        "equivalente em São Paulo, não sobre a cidade de origem do dado."
     ),
     "descubra_bairro": (
         "Formato 'Descubra o bairro': abre com um gancho sobre a atração/evento/"
@@ -150,7 +163,7 @@ def _dividir_por_pilar(pesquisa_md: str) -> dict[str, str]:
 
     blocos: dict[str, list[str]] = {"atracao": [], "compra_venda": [], "investimento": []}
     for titulo, corpo in pares:
-        if titulo.startswith("Atrações e vida no bairro") or titulo.startswith("Também no radar"):
+        if titulo.startswith("Atrações e vida no bairro"):
             blocos["atracao"].append(corpo.strip())
         elif titulo.startswith("Compra/venda e mercado imobiliário") or titulo.startswith("Mercado geral"):
             blocos["compra_venda"].append(corpo.strip())
@@ -176,36 +189,77 @@ def _pilar_disponivel(pilar: str, secoes: dict[str, str]) -> bool:
     return any(t in TEMPLATES_SEM_PAUTA for t in TEMPLATES_POR_PILAR[pilar])
 
 
-def selecionar_pilar_e_template(secoes: dict[str, str]) -> tuple[str, str, bool]:
+def selecionar_template(pilar: str, secoes: dict[str, str]) -> tuple[str, bool]:
     """
-    Sorteia o pilar do post de hoje respeitando o mix 50/25/25. Retorna
-    também `tem_pauta` — quando False, o template sorteado é sempre um dos
-    evergreen (TEMPLATES_SEM_PAUTA), e a pauta passada pro modelo fica vazia.
+    Sorteia o template dentro do pilar já decidido pela seleção de pauta
+    do dia (ver utils/selecao_pauta.py — o pilar não é mais sorteado
+    aqui). Retorna também `tem_pauta` — quando False, o template
+    sorteado é sempre um dos evergreen (TEMPLATES_SEM_PAUTA), e a pauta
+    passada pro modelo fica vazia.
     """
-    candidatos = [pilar for pilar in PESOS_PILARES if _pilar_disponivel(pilar, secoes)]
-    if not candidatos:
-        raise RuntimeError("Nenhum pilar disponível hoje (sem pauta e sem template evergreen).")
-
-    pesos = [PESOS_PILARES[pilar] for pilar in candidatos]
-    pilar = random.choices(candidatos, weights=pesos, k=1)[0]
-
     tem_pauta = _secao_tem_conteudo(secoes.get(pilar, ""))
+    if not tem_pauta and not _pilar_disponivel(pilar, secoes):
+        raise RuntimeError(f"Pilar '{pilar}' sem pauta e sem template evergreen disponível hoje.")
+
     templates_possiveis = (
         TEMPLATES_POR_PILAR[pilar] if tem_pauta
         else [t for t in TEMPLATES_POR_PILAR[pilar] if t in TEMPLATES_SEM_PAUTA]
     )
     template = random.choice(templates_possiveis)
-    return pilar, template, tem_pauta
+    return template, tem_pauta
 
 
 def _bloco_historico_temas() -> str:
     historico = temas_recentes_para_prompt()
     if not historico:
         return "(nenhum post publicado ainda)"
-    return "\n".join(f"- tema: {h['tema']} | viés: {h['vies']} (pilar: {h['pilar']}, {h['data']})" for h in historico)
+    linhas = []
+    for h in historico:
+        extra = ""
+        if h.get("categoria"):
+            extra = f", categoria: {h['categoria']}"
+        elif h.get("vies_estrutural"):
+            extra = f", viés estrutural: {h['vies_estrutural']}"
+        if h.get("bairro_alvo"):
+            extra += f", bairro: {h['bairro_alvo']}"
+        linhas.append(f"- tema: {h['tema']} | viés: {h['vies']} (pilar: {h['pilar']}{extra}, {h['data']})")
+    return "\n".join(linhas)
 
 
-def _montar_prompt_sistema(template: str, pilar: str, tem_pauta: bool) -> str:
+def _instrucao_categoria_ou_vies(pauta: dict) -> str:
+    """
+    Instrução explícita do ângulo de hoje — categoria (pilar atração) ou
+    viés estrutural (pilares de imóveis) — pedido do usuário, 01/08/2026:
+    escrever de fato do ponto de vista certo (ex.: comprador vs vendedor),
+    não deixar o modelo decidir livremente.
+    """
+    bairro_alvo = pauta["bairro_alvo"]
+    if pauta["pilar"] == "atracao":
+        categoria = pauta["categoria"]
+        return (
+            f"Categoria de hoje: **{categoria}**. Bairro-alvo: **{bairro_alvo}** "
+            f"(escolhido por ter afinidade real com {categoria}, não é aleatório). "
+            f"O post precisa ser genuinamente sobre {categoria} nesse bairro — "
+            f"não misture com outra categoria (ex.: se a categoria é gastronomia, "
+            f"não vire um post sobre um museu do bairro)."
+        )
+
+    vies = pauta["vies_estrutural"]
+    rotulos = {
+        "comprador": "ponto de vista de quem está COMPRANDO o primeiro imóvel",
+        "vendedor": "ponto de vista de quem está VENDENDO um imóvel",
+        "investidor_aluguel": "ponto de vista de quem investe pra RENDA VIA ALUGUEL (não FII/fundo/ação)",
+        "investidor_valorizacao": "ponto de vista de quem investe mirando VALORIZAÇÃO do imóvel no tempo",
+    }
+    return (
+        f"Viés estrutural de hoje: escreva do {rotulos[vies]}. Bairro-alvo: "
+        f"**{bairro_alvo}** (escolhido por ter afinidade real com esse perfil "
+        f"de público). Todo o post — capa, slides e legenda — precisa manter "
+        f"esse ponto de vista específico, não o genérico do pilar."
+    )
+
+
+def _montar_prompt_sistema(template: str, pilar: str, tem_pauta: bool, formato: str, pauta_do_dia: dict) -> str:
     with open("config/config.md", "r", encoding="utf-8") as f:
         regras_projeto = f.read()
 
@@ -218,10 +272,31 @@ def _montar_prompt_sistema(template: str, pilar: str, tem_pauta: bool) -> str:
              "específico tipo 'X% dos compradores...' sem fonte real)"
     )
 
+    instrucao_formato = (
+        "O post de hoje vai ao ar como IMAGEM ÚNICA — só a capa (slide 1) é "
+        "publicada, os outros slides não aparecem pra quem vê o post. Por "
+        "isso o corpo da capa (ver instrução do slide 1 abaixo) fica bem "
+        "curto, só um gancho de curiosidade — TODO o desenvolvimento real "
+        "(o raciocínio, os pontos, o contexto) mora exclusivamente na "
+        "legenda. Por isso a legenda precisa ser MAIOR, DETALHADA e "
+        "EXPLICATIVA: 3 a 5 parágrafos curtos e separados, cobrindo o "
+        "conteúdo completo que num carrossel ficaria espalhado pelos "
+        "slides intermediários — sem a legenda, ninguém teria acesso a "
+        "esse conteúdo, então não economize substância nela."
+        if formato == "imagem_unica"
+        else "O post de hoje vai ao ar como CARROSSEL — o conteúdo (os "
+             "pontos, o raciocínio) já é explicado ao longo dos slides. A "
+             "legenda pode ser MENOR (2 a 3 parágrafos curtos), sem repetir "
+             "o carrossel inteiro: foca em complementar com contexto e nas "
+             "palavras-chave de SEO."
+    )
+
     return f"""Você escreve o conteúdo do perfil de Instagram @morar_sp.
 
 Regras do projeto (config/config.md):
 {regras_projeto}
+
+{_instrucao_categoria_ou_vies(pauta_do_dia)}
 
 Temas e viés JÁ PUBLICADOS — não repita a mesma combinação tema+viés. O
 tema pode voltar a aparecer (é normal um nicho ter temas recorrentes, tipo
@@ -233,15 +308,40 @@ Formato do post: carrossel de Instagram. {instrucao_pauta}, gere
 entre 4 e 7 slides, com esta estrutura fixa:
 
 - **Slide 1 (capa)**: usa o título geral do carrossel (a ideia central) +
-  um texto de corpo (o gancho/contexto).
-- **Slides intermediários (do 2º ao penúltimo)**: cada um tem um
-  MINI-TÍTULO obrigatório (curto, poucas palavras, a ideia central daquele
-  slide) + um corpo OPCIONAL (detalhe/contexto — pode ficar só no
-  mini-título se não precisar de mais nada).
+  um corpo de até {30 if formato != "imagem_unica" else 15} palavras (ou ~{120 if formato != "imagem_unica" else 60}
+  caracteres). Esse corpo AMPLIA a visão que o título já apresentou (mais
+  contexto, mais stakes, por que isso importa agora) — ele NUNCA responde
+  ou resolve o que o título colocou; a resposta/desenvolvimento fica
+  {"pra legenda (é o ÚNICO lugar onde ela existe nesse formato)" if formato == "imagem_unica" else "pros slides seguintes e pra legenda"}.
+  {"Nesse formato a imagem tem só um objetivo: gerar curiosidade suficiente pra fazer quem vê querer ler a legenda — quanto mais econômico e intrigante, melhor, sem virar telegráfico a ponto de não fazer sentido sozinho." if formato == "imagem_unica" else "Precisa ter substância real (curiosidade, tensão, um dado), nunca uma frase telegráfica de poucas palavras."}
+- **Slides intermediários (do 2º ao penúltimo)**: SÓ o MINI-TÍTULO
+  obrigatório (curto, poucas palavras) — SEM corpo, nenhuma linha de
+  texto abaixo do mini-título. O slide 2 especificamente NÃO pode repetir
+  a ideia da capa: ele é o próximo passo do raciocínio (uma provocação,
+  uma pergunta que cria tensão, ou o primeiro elo de uma sequência
+  lógica). Cada mini-título seguinte avança um passo novo do argumento —
+  a sequência de mini-títulos, lida sozinha (sem nenhum corpo), já precisa
+  contar a lógica do post do início ao fim.
 - **Último slide**: mini-título é um CTA obrigatório — chame pra curtir,
   comentar, compartilhar ou salvar o post. Pode vir como pergunta pra
   encaixar o CTA de forma mais natural (ex.: "Já foi? Salva esse post pra
-  quando for" / "Mora por perto? Comenta aqui"). Corpo opcional.
+  quando for" / "Mora por perto? Comenta aqui"). Corpo opcional e, se
+  usado, curto. O CTA precisa fazer sentido com o que o post REALMENTE
+  desenvolveu — nunca um CTA genérico ou desconectado do conteúdo (ex.:
+  chamar pra "salvar as dicas" só faz sentido se o post de fato listou
+  dicas).
+
+Coerência: o post inteiro (capa → slides → CTA → legenda) segue uma
+sequência lógica de raciocínio, sem saltos — cada parte constrói em cima
+da anterior, do gancho da capa até o fechamento da legenda.
+
+Foco geográfico: São Paulo (a cidade em geral ou um bairro/região
+específica) é sempre a PROTAGONISTA do post — é o que faz o algoritmo do
+Instagram entregar o conteúdo pra audiência certa. Se a pauta usa outra
+cidade como gancho ou comparação (ex.: um dado do Rio de Janeiro), essa
+outra cidade pode aparecer como contexto breve, mas o post não pode ficar
+com mais espaço dedicado a ela do que a São Paulo — o argumento central,
+a maior parte dos slides e a conclusão sempre voltam o foco pra SP.
 
 Template desta pauta: {TEMPLATE_INSTRUCOES[template]}
 
@@ -260,13 +360,17 @@ pra fechar? um contraste antes/depois? algo pra dar de valor antes do CTA?):
 
 {chr(10).join(f"- **{nome}**: {instrucao}" for nome, instrucao in FRAMEWORK_LEGENDA_INSTRUCOES.items() if nome in FRAMEWORKS_POR_PILAR[pilar])}
 
-Legenda: direta e coerente com o framework escolhido, sem enrolação —
-normalmente 2-3 frases já bastam pra aplicar o framework com substância.
-Não alongue por alongar; corte qualquer frase que não agregue.
+{instrucao_formato}
 
-Formatação da legenda: quebre em parágrafos curtos (2-3 frases cada) com
-uma linha em branco entre cada parágrafo — nunca um bloco único de texto
-denso, precisa ser escaneável.
+Legenda: coerente com o framework escolhido, e com SUBSTÂNCIA de verdade.
+Estruture em parágrafos CURTOS (1-2 frases cada), cada um avançando uma
+ideia — nunca um bloco denso. Não alongue por alongar; corte qualquer
+frase que não agregue. Sempre termine com um CTA explícito (curtir,
+comentar, compartilhar ou salvar) antes das hashtags — mesmo no
+carrossel, que já tem CTA no último slide, repita brevemente na legenda.
+
+Formatação da legenda: uma linha em branco entre cada parágrafo, pra ficar
+escaneável e fácil de ler rápido no feed.
 
 SEO/algoritmo: o Instagram indexa o TEXTO da legenda pra busca e
 recomendação — inclua naturalmente (nunca forçado/robótico) os termos que
@@ -277,10 +381,14 @@ devem aparecer no corpo da legenda (não só nas hashtags) — isso é o que
 faz o post aparecer pra quem busca ativamente por esse assunto, não só pra
 quem já segue o perfil.
 
-Hashtags: exatamente 3, com variações semânticas complementares (uma sobre
-o lugar/tema específico, uma sobre a região/bairro, uma mais ampla sobre o
-nicho) — nunca 3 hashtags que dizem basicamente a mesma coisa. Sem tom
-comercial.
+Hashtags: de 3 a 5, relacionadas ao contexto real do post — combine
+bairro/região + tema + pilar ({pilar}) + o assunto específico do
+conteúdo (ex.: uma do bairro citado, uma do tema central, uma do
+pilar/nicho, uma do ângulo/viés de hoje) — nunca hashtags redundantes que
+dizem basicamente a mesma coisa. Sem tom comercial. IMPORTANTE: as
+hashtags vão como a ÚLTIMA linha dentro da própria seção "## Legenda"
+(mesmo bloco de texto, não uma seção nova) — nunca esqueça de incluí-las,
+isso é parte obrigatória da legenda.
 
 Por fim, gere 3-5 palavras-chave EM INGLÊS pra buscar uma foto de fundo no
 Unsplash que combine com o ASSUNTO ESPECÍFICO do post (não um termo genérico
@@ -298,6 +406,14 @@ Declare também, de forma explícita e curta:
   de "quem compra antes do metrô abrir historicamente sai ganhando") —
   este é o que NÃO pode repetir a combinação com o tema (ver histórico
   acima).
+- "Destaque do título": 1 a 3 palavras — copiadas EXATAMENTE como aparecem
+  no título geral (mesma grafia/acentuação) — que são a palavra ou
+  palavras mais importantes do título, pra receberem cor de destaque na
+  imagem. Escolha a palavra que carrega o gancho/tensão central (ex.: no
+  título "46ª Festa das Cerejeiras: por que esse evento nunca sai de
+  moda?", destacar "nunca sai de moda" ou só "moda" — não destaque
+  artigos/preposições soltos, e nunca destaque o bairro/região sozinho se
+  ele não for o ponto central da frase).
 
 Responda SOMENTE em markdown, neste formato exato (### só aparece do
 slide 2 em diante — o slide 1 não usa, ele já tem o título geral do "#").
@@ -331,6 +447,9 @@ tendo mini-título — nunca cole o corpo do slide 1 direto depois do "#
 
 ## Viés
 [ângulo específico de hoje sobre esse tema]
+
+## Destaque do título
+[1 a 3 palavras, copiadas exatamente como aparecem no título geral]
 """
 
 
@@ -354,17 +473,29 @@ def _remover_preambulo(texto: str) -> str:
     return texto[match.start():] if match else texto
 
 
-def gerar_copy(pauta: str, template: str, pilar: str, tem_pauta: bool) -> str:
+TENTATIVAS_SEM_TRAVESSAO = 3  # instrução no prompt não é garantia — checagem real aqui
+
+
+def gerar_copy(pauta: str, template: str, pilar: str, tem_pauta: bool, formato: str, pauta_do_dia: dict) -> str:
     """Gera o texto/copy do post com base na pauta e no template; o modelo escolhe o framework da legenda."""
     client = anthropic.Anthropic()
     mensagem = f"Pauta de hoje:\n\n{pauta}" if tem_pauta else "Gere o post evergreen (sem pauta do dia pra esse template)."
-    resposta = client.messages.create(
-        model=MODELO,
-        max_tokens=4000,
-        system=_montar_prompt_sistema(template, pilar, tem_pauta),
-        messages=[{"role": "user", "content": mensagem}],
-    )
-    return _remover_preambulo(_extrair_texto(resposta))
+    texto = ""
+    for tentativa in range(1, TENTATIVAS_SEM_TRAVESSAO + 1):
+        resposta = client.messages.create(
+            model=MODELO,
+            max_tokens=MAX_TOKENS_TETO,
+            thinking={"type": "disabled"},
+            system=_montar_prompt_sistema(template, pilar, tem_pauta, formato, pauta_do_dia),
+            messages=[{"role": "user", "content": mensagem}],
+        )
+        texto = _remover_preambulo(_extrair_texto(resposta))
+        if "—" not in texto:
+            return texto
+        print(f"Geração contém travessão (tentativa {tentativa}/{TENTATIVAS_SEM_TRAVESSAO}) — gerando de novo...")
+
+    print("Travessão persistiu após todas as tentativas — substituindo por vírgula como última garantia.")
+    return texto.replace("—", ",")
 
 
 def _extrair_secao(texto: str, nome_secao: str) -> tuple[str, str]:
@@ -381,11 +512,12 @@ def _extrair_framework_escolhido(texto: str) -> tuple[str, str]:
     return _extrair_secao(texto, "Framework")
 
 
-def _extrair_tema_e_vies(texto: str) -> tuple[str, str, str]:
-    """Extrai '## Tema' e '## Viés'. Retorna (tema, vies, texto_sem_as_secoes)."""
+def _extrair_tema_e_vies(texto: str) -> tuple[str, str, str, str]:
+    """Extrai '## Tema', '## Viés' e '## Destaque do título'. Retorna (tema, vies, destaque, texto_sem_as_secoes)."""
     tema, texto = _extrair_secao(texto, "Tema")
     vies, texto = _extrair_secao(texto, "Viés")
-    return tema, vies, texto
+    destaque, texto = _extrair_secao(texto, "Destaque do título")
+    return tema, vies, destaque, texto
 
 
 def despersonalizar(texto: str) -> str:
@@ -419,7 +551,8 @@ def despersonalizar(texto: str) -> str:
     )
     resposta = client.messages.create(
         model=MODELO,
-        max_tokens=3000,
+        max_tokens=MAX_TOKENS_TETO,
+        thinking={"type": "disabled"},
         system=system,
         messages=[{"role": "user", "content": texto}],
     )
@@ -432,14 +565,22 @@ def despersonalizar(texto: str) -> str:
     return revisado
 
 
-def salvar_copy(texto: str, pilar: str, template: str, framework_legenda: str, tema: str, vies: str) -> str:
+def salvar_copy(
+    texto: str, pilar: str, template: str, framework_legenda: str, tema: str, vies: str, formato: str,
+    pauta_do_dia: dict, destaque_titulo: str = "",
+) -> str:
     hoje = date.today().isoformat()
     pasta = f"conteudo/posts-{hoje}"
     os.makedirs(pasta, exist_ok=True)
     caminho = f"{pasta}/copy.md"
+    categoria = pauta_do_dia.get("categoria") or ""
+    vies_estrutural = pauta_do_dia.get("vies_estrutural") or ""
+    bairro_alvo = pauta_do_dia.get("bairro_alvo") or ""
     cabecalho = (
-        f"<!-- pilar: {pilar} | template: {template} | framework_legenda: {framework_legenda} "
-        f"| tema: {tema} | vies: {vies} -->\n\n"
+        f"<!-- pilar: {pilar} | template: {template} | formato: {formato} "
+        f"| framework_legenda: {framework_legenda} | tema: {tema} | vies: {vies} "
+        f"| categoria: {categoria} | vies_estrutural: {vies_estrutural} | bairro_alvo: {bairro_alvo} "
+        f"| destaque_titulo: {destaque_titulo} -->\n\n"
     )
     with open(caminho, "w", encoding="utf-8") as f:
         f.write(cabecalho + texto)
@@ -447,18 +588,25 @@ def salvar_copy(texto: str, pilar: str, template: str, framework_legenda: str, t
 
 
 if __name__ == "__main__":
+    pauta_do_dia = carregar_ou_selecionar_pauta_do_dia()
+    pilar = pauta_do_dia["pilar"]
+
     pesquisa_do_dia = ler_pesquisa_do_dia()
     secoes = _dividir_por_pilar(pesquisa_do_dia)
-    pilar, template, tem_pauta = selecionar_pilar_e_template(secoes)
-    print(f"Pilar selecionado: {pilar} | Template: {template} | Evergreen: {not tem_pauta}")
+    template, tem_pauta = selecionar_template(pilar, secoes)
+    formato = escolher_formato_post()
+    if pilar == "atracao":
+        print(f"Pilar: {pilar} | Categoria: {pauta_do_dia['categoria']} | Bairro-alvo: {pauta_do_dia['bairro_alvo']} | Template: {template} | Evergreen: {not tem_pauta} | Formato: {formato}")
+    else:
+        print(f"Pilar: {pilar} | Viés: {pauta_do_dia['vies_estrutural']} | Bairro-alvo: {pauta_do_dia['bairro_alvo']} | Template: {template} | Evergreen: {not tem_pauta} | Formato: {formato}")
 
     pauta = secoes[pilar] if tem_pauta else ""
-    copy_bruto = gerar_copy(pauta, template=template, pilar=pilar, tem_pauta=tem_pauta)
+    copy_bruto = gerar_copy(pauta, template=template, pilar=pilar, tem_pauta=tem_pauta, formato=formato, pauta_do_dia=pauta_do_dia)
     copy_revisado = despersonalizar(copy_bruto)
     framework_legenda, copy_sem_framework = _extrair_framework_escolhido(copy_revisado)
-    tema, vies, copy_final = _extrair_tema_e_vies(copy_sem_framework)
+    tema, vies, destaque_titulo, copy_final = _extrair_tema_e_vies(copy_sem_framework)
     print(f"Framework da legenda escolhido pelo modelo: {framework_legenda}")
-    print(f"Tema: {tema} | Viés: {vies}")
+    print(f"Tema: {tema} | Viés: {vies} | Destaque do título: {destaque_titulo}")
 
-    caminho = salvar_copy(copy_final, pilar, template, framework_legenda, tema, vies)
+    caminho = salvar_copy(copy_final, pilar, template, framework_legenda, tema, vies, formato, pauta_do_dia, destaque_titulo)
     print(f"Copy salvo em: {caminho}")

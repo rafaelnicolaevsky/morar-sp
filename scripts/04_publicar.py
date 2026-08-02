@@ -34,20 +34,37 @@ def ler_copy_do_dia() -> str:
 
 
 def ler_legenda_do_dia(copy_md: str) -> str:
-    match = re.search(r"(?m)^## Legenda\s*\n(.+?)\s*$", copy_md, re.DOTALL)
+    # Precisa parar só na próxima seção "## " ou no fim do arquivo, nunca no
+    # fim da primeira linha — usar "$" junto de re.MULTILINE (sem lookahead)
+    # casava no fim da primeira linha da legenda, cortando o resto do texto
+    # (lista de sinais, explicação, hashtags) fora do post publicado.
+    match = re.search(r"^## Legenda\s*\n(.+?)(?=\n## |\Z)", copy_md, re.DOTALL | re.MULTILINE)
     if not match:
         raise ValueError("Não encontrei a seção '## Legenda' no copy.md de hoje.")
     return match.group(1).strip()
 
 
 def ler_cabecalho_do_dia(copy_md: str) -> dict:
-    """Lê pilar/tema/vies do cabeçalho HTML comment gerado pela etapa 2 — usado pra registrar no histórico."""
+    """
+    Lê pilar/tema/vies (+ categoria/vies_estrutural/bairro_alvo, ver
+    utils/selecao_pauta.py) do cabeçalho HTML comment gerado pela etapa
+    2 — usado pra registrar no histórico.
+    """
     cabecalho = re.search(
-        r"<!--.*?pilar:\s*(\w+).*?tema:\s*(.+?)\s*\|\s*vies:\s*(.+?)\s*-->", copy_md, re.DOTALL
+        r"<!--.*?pilar:\s*(\w+).*?tema:\s*(.+?)\s*\|\s*vies:\s*(.+?)\s*"
+        r"\|\s*categoria:\s*(.*?)\s*\|\s*vies_estrutural:\s*(.*?)\s*\|\s*bairro_alvo:\s*(.*?)\s*-->",
+        copy_md, re.DOTALL,
     )
     if not cabecalho:
-        return {"pilar": "", "tema": "", "vies": ""}
-    return {"pilar": cabecalho.group(1), "tema": cabecalho.group(2), "vies": cabecalho.group(3)}
+        return {"pilar": "", "tema": "", "vies": "", "categoria": "", "vies_estrutural": "", "bairro_alvo": ""}
+    return {
+        "pilar": cabecalho.group(1),
+        "tema": cabecalho.group(2),
+        "vies": cabecalho.group(3),
+        "categoria": cabecalho.group(4),
+        "vies_estrutural": cabecalho.group(5),
+        "bairro_alvo": cabecalho.group(6),
+    }
 
 
 def listar_imagens_do_dia() -> list[str]:
@@ -95,7 +112,17 @@ if __name__ == "__main__":
     registrar_log(resultado)
 
     if cabecalho["tema"] and cabecalho["vies"]:
-        registrar_tema(cabecalho["tema"], cabecalho["vies"], cabecalho["pilar"], date.today().isoformat())
+        registrar_tema(
+            cabecalho["tema"], cabecalho["vies"], cabecalho["pilar"], date.today().isoformat(),
+            categoria=cabecalho["categoria"] or None,
+            vies_estrutural=cabecalho["vies_estrutural"] or None,
+            bairro_alvo=cabecalho["bairro_alvo"] or None,
+        )
         print(f"Tema/viés registrados no histórico: {cabecalho['tema']} | {cabecalho['vies']}")
+
+    # Marca a pasta do dia como publicada de verdade — só chega aqui se
+    # tudo acima rodou sem exceção. scripts/limpar_execucoes_antigas.py só
+    # apaga pastas com esse marcador, nunca um dia que falhou.
+    (Path(f"conteudo/posts-{date.today().isoformat()}") / ".publicado").touch()
 
     print(f"Publicado: {resultado}")

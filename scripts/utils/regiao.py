@@ -48,6 +48,19 @@ def relevante_para_atracao(titulo: str) -> bool:
     return _contem_palavra(texto, PALAVRAS_ATRACAO)
 
 
+def relevante_para_categoria(titulo: str, palavras_categoria: list[str]) -> bool:
+    """
+    Igual a relevante_para_atracao, mas com uma lista de palavras própria
+    da categoria (gastronomia/entretenimento/cultura/lazer/festivais —
+    ver config/categorias_bairros.py) em vez do filtro genérico de
+    "atração". Pedido do usuário, 01/08/2026.
+    """
+    texto = titulo.lower()
+    if _contem_palavra(texto, PALAVRAS_NEGATIVAS):
+        return False
+    return _contem_palavra(texto, palavras_categoria)
+
+
 def buscar_mencoes_google_news(query: str, janela_dias: int) -> list[dict]:
     """Busca notícias recentes (últimos `janela_dias` dias) no Google News. Retorna {titulo, link, data}."""
     url = "https://news.google.com/rss/search"

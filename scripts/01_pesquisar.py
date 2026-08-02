@@ -18,7 +18,9 @@ import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from config.distritos_sp import NOMES_AMBIGUOS
-from scripts.utils.regiao import buscar_mencoes_google_news, carregar_regiao_foco, relevante_para_atracao
+from config.categorias_bairros import PALAVRAS_CHAVE_CATEGORIA
+from scripts.utils.regiao import buscar_mencoes_google_news, relevante_para_categoria
+from scripts.utils.selecao_pauta import carregar_ou_selecionar_pauta_do_dia
 
 USER_AGENT = "Mozilla/5.0 (compatible; MorarSP-Pesquisa/1.0)"
 TIMEOUT = 15
@@ -53,8 +55,7 @@ MAX_ITENS_POR_FEED = 5
 TAMANHO_MAX_RESUMO = 280
 
 JANELA_ATRACOES_DIAS = 10
-MAX_ITENS_REGIAO_PRINCIPAL = 7
-MAX_ITENS_POR_REGIAO_SECUNDARIA = 2
+MAX_ITENS_CATEGORIA = 7
 
 
 RE_BOILERPLATE_WORDPRESS = re.compile(r"\s*The post .+ appeared first on .+?\.\s*$")
@@ -109,15 +110,21 @@ def _formatar_secao(categoria: str, itens: list[dict]) -> str:
     return "\n".join(linhas)
 
 
-def _buscar_atracoes_distrito(distrito: str, limite: int) -> list[dict]:
-    """Busca pautas de atração/lifestyle recentes de um distrito (título já filtrado por relevância)."""
+def _buscar_categoria_no_bairro(distrito: str, categoria: str, limite: int) -> list[dict]:
+    """
+    Busca pautas de uma categoria específica (gastronomia/entretenimento/
+    cultura/lazer/festivais) no bairro-alvo escolhido pela seleção de
+    pauta do dia (ver utils/selecao_pauta.py) — substitui a busca
+    genérica de "atração" por bairro (pedido do usuário, 01/08/2026).
+    """
     query = f'"{distrito}" bairro São Paulo' if distrito in NOMES_AMBIGUOS else f'"{distrito}" São Paulo'
     try:
         itens = buscar_mencoes_google_news(query, JANELA_ATRACOES_DIAS)
     except (requests.RequestException, ET.ParseError):
         return []
 
-    relevantes = [item for item in itens if relevante_para_atracao(item["titulo"])]
+    palavras = PALAVRAS_CHAVE_CATEGORIA[categoria]
+    relevantes = [item for item in itens if relevante_para_categoria(item["titulo"], palavras)]
     formatados = [
         {"titulo": _limpar_texto(item["titulo"]), "link": item["link"], "resumo": ""}
         for item in relevantes[:limite]
@@ -143,38 +150,35 @@ def _secao_investimento_aluguel() -> str:
     return _formatar_secao("Investimento (comprar para alugar)", formatados)
 
 
-def _secao_regiao_foco() -> str:
-    try:
-        regiao_foco = carregar_regiao_foco()
-    except FileNotFoundError as erro:
-        return f"## Atrações e vida no bairro\n\n_{erro}_\n"
+def _secao_atracao_categoria(pauta: dict) -> str:
+    """
+    Busca pautas SÓ se o pilar sorteado pra hoje (ver utils/selecao_pauta.py)
+    for "atracao" — a categoria (gastronomia/entretenimento/cultura/lazer/
+    festivais) e o bairro-alvo já vêm decididos pela seleção de pauta,
+    escolhido pela tabela de afinidade categoria×bairro (pedido do
+    usuário, 01/08/2026 — substitui a busca genérica de "atração" por
+    região em alta).
+    """
+    if pauta["pilar"] != "atracao":
+        return "## Atrações e vida no bairro\n\n_Pilar de hoje não é atração — ver seção do pilar sorteado._\n"
 
-    principal = regiao_foco["regiao_principal"]
-    secundarias = regiao_foco["regioes_secundarias"]
-
-    secoes = [_formatar_secao(
-        f"Atrações e vida no bairro — {principal} (região em foco, 70%)",
-        _buscar_atracoes_distrito(principal, MAX_ITENS_REGIAO_PRINCIPAL),
-    )]
-
-    for distrito in secundarias:
-        secoes.append(_formatar_secao(
-            f"Também no radar — {distrito} (30%)",
-            _buscar_atracoes_distrito(distrito, MAX_ITENS_POR_REGIAO_SECUNDARIA),
-        ))
-
-    return "\n".join(secoes)
+    categoria = pauta["categoria"]
+    bairro_alvo = pauta["bairro_alvo"]
+    itens = _buscar_categoria_no_bairro(bairro_alvo, categoria, MAX_ITENS_CATEGORIA)
+    return _formatar_secao(f"Atrações e vida no bairro — {categoria} em {bairro_alvo}", itens)
 
 
-def pesquisar_tendencias() -> str:
+def pesquisar_tendencias(pauta: dict) -> str:
     """
     Retorna um bloco de texto (markdown) com as pautas encontradas no dia,
-    agrupadas por categoria editorial.
+    agrupadas por categoria editorial. `pauta` vem de
+    utils/selecao_pauta.carregar_ou_selecionar_pauta_do_dia() — a mesma
+    pauta usada por scripts/02_gerar_copy.py.
     """
     hoje = date.today().isoformat()
     secoes = [f"# Pesquisa de tendências — {hoje}\n"]
 
-    secoes.append(_secao_regiao_foco())
+    secoes.append(_secao_atracao_categoria(pauta))
 
     for categoria, url in FEEDS_NICHO:
         try:
@@ -207,6 +211,12 @@ def salvar_pesquisa(conteudo: str) -> str:
 
 
 if __name__ == "__main__":
-    resultado = pesquisar_tendencias()
+    pauta = carregar_ou_selecionar_pauta_do_dia()
+    if pauta["pilar"] == "atracao":
+        print(f"Pauta de hoje: {pauta['pilar']} | categoria: {pauta['categoria']} | bairro-alvo: {pauta['bairro_alvo']}")
+    else:
+        print(f"Pauta de hoje: {pauta['pilar']} | viés: {pauta['vies_estrutural']} | bairro-alvo: {pauta['bairro_alvo']}")
+
+    resultado = pesquisar_tendencias(pauta)
     caminho = salvar_pesquisa(resultado)
     print(f"Pesquisa salva em: {caminho}")
