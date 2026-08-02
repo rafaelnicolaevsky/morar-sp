@@ -25,5 +25,14 @@
     "categoria": null,
     "vies_estrutural": "comprador",
     "bairro_alvo": "Vila Mariana | destaque_titulo: isso é bom ou ruim"
+  },
+  {
+    "tema": "estoque de imóveis à venda em São Paulo",
+    "vies": "mais estoque disponível força quem vende a escolher entre esperar pelo preço ideal ou ajustar pra vender mais rápido (pilar: compra_venda, viés estrutural: vendedor, bairro: Itaim Bibi)",
+    "pilar": "compra_venda",
+    "data": "2026-08-02",
+    "categoria": null,
+    "vies_estrutural": "vendedor",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
   }
 ]
