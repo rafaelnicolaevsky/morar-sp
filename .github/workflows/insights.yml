@@ -1,0 +1,35 @@
+name: insights
+
+# Relatório semanal de insights — toda segunda-feira de manhã, cobre os
+# posts publicados nos últimos 7 dias (ver scripts/relatorio_insights.py).
+# Adiciona uma linha por post na aba deste projeto na planilha
+# "INSIGHTS" (compartilhada entre os 5 projetos de Instagram).
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # segunda-feira 06:00 UTC = 03:00 BRT
+  workflow_dispatch: {}
+
+jobs:
+  insights:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependências
+        run: pip install requests python-dotenv gspread google-auth
+
+      - name: Configurar credencial do Google Sheets
+        run: echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}' > config/google-service-account.json
+
+      - name: Rodar relatório
+        env:
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          INSTAGRAM_ACCOUNT_ID: ${{ secrets.INSTAGRAM_ACCOUNT_ID }}
+          INSIGHTS_SHEET_ID: ${{ secrets.INSIGHTS_SHEET_ID }}
+          GOOGLE_SERVICE_ACCOUNT_FILE: config/google-service-account.json
+        run: python scripts/relatorio_insights.py
