@@ -10,12 +10,11 @@ Imprime "true" ou "false" (stdout), nada mais.
 """
 
 import os
-from datetime import date
 
-from agendador import plano_de_hoje
+from agendador import hoje_brt, plano_de_hoje
 
 if __name__ == "__main__":
-    hoje = date.today()
+    hoje = hoje_brt()
     turno = os.environ["TURNO"]
     horario = os.environ["HORARIO"]
     plano = plano_de_hoje(hoje)

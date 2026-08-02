@@ -7,11 +7,12 @@ Graph API (que exige image_url público, não aceita upload de arquivo local).
 import os
 import subprocess
 import time
-from datetime import date
 from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
+
+from scripts.utils.data_brt import hoje_brt
 
 load_dotenv()
 
@@ -55,7 +56,7 @@ def publicar_imagens_no_repo_midia(caminhos_imagens: list[str]) -> list[str]:
             "Ajuste MIDIA_REPO_PATH no .env se o caminho for outro."
         )
 
-    hoje = date.today().isoformat()
+    hoje = hoje_brt().isoformat()
     pasta_destino = MIDIA_REPO_PATH / "posts" / hoje
     pasta_destino.mkdir(parents=True, exist_ok=True)
 

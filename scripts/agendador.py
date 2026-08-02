@@ -39,10 +39,23 @@ pra esse turno hoje, encerra sem fazer nada.
 import random
 import subprocess
 import sys
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
+
+# Fuso de Brasília fixo (não o fuso do servidor) — mesmo achado do
+# scripts/utils/data_brt.py, duplicado aqui (não importado) de propósito:
+# agendador.py precisa ficar 100% biblioteca padrão, sem sys.path.insert
+# nem dependência de scripts.utils, porque a checagem leve do CI
+# (_ci_checar_horario.py) importa este módulo ANTES de instalar qualquer
+# dependência.
+FUSO_BRT = timezone(timedelta(hours=-3))
+
+
+def hoje_brt() -> date:
+    return datetime.now(FUSO_BRT).date()
+
 
 TURNOS = ["manha", "tarde", "noite"]
 DATA_EPOCA = date(2026, 7, 27)  # dia 1 do ciclo (2 posts)
@@ -106,7 +119,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     turno_atual, horario_atual = sys.argv[1], sys.argv[2]
-    hoje = date.today()
+    hoje = hoje_brt()
     plano = plano_de_hoje(hoje)
 
     print(f"Plano de hoje ({hoje}): {plano['quantidade']} post(s), turnos: {plano['turnos']}, horarios: {plano['horarios']}")

@@ -25,6 +25,7 @@ import xml.etree.ElementTree as ET
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from config.distritos_sp import DISTRITOS_SP, NOMES_AMBIGUOS
+from scripts.utils.data_brt import hoje_brt
 from scripts.utils.regiao import CAMINHO_ESTADO, buscar_mencoes_google_news, relevante_para_atracao
 
 PAUSA_ENTRE_BUSCAS = 0.3
@@ -79,7 +80,7 @@ def _precisa_revisar(estado: dict | None) -> bool:
     if estado is None:
         return True
     data_revisao = date.fromisoformat(estado["data_revisao"])
-    return (date.today() - data_revisao).days >= DIAS_ENTRE_REVISOES
+    return (hoje_brt() - data_revisao).days >= DIAS_ENTRE_REVISOES
 
 
 def selecionar_regiao(forcar: bool = False) -> dict:
@@ -96,7 +97,7 @@ def selecionar_regiao(forcar: bool = False) -> dict:
     novo_estado = {
         "regiao_principal": principal["distrito"],
         "regioes_secundarias": [item["distrito"] for item in secundarias],
-        "data_revisao": date.today().isoformat(),
+        "data_revisao": hoje_brt().isoformat(),
         "top_10_ranking": ranking[:10],
     }
     _salvar_estado(novo_estado)

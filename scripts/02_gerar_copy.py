@@ -24,6 +24,7 @@ import anthropic
 from dotenv import load_dotenv
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.utils.data_brt import hoje_brt
 from scripts.utils.formato import escolher_formato_post
 from scripts.utils.historico_temas import temas_recentes_para_prompt
 from scripts.utils.selecao_pauta import carregar_ou_selecionar_pauta_do_dia
@@ -150,7 +151,7 @@ FRAMEWORK_LEGENDA_INSTRUCOES = {
 
 def ler_pesquisa_do_dia() -> str:
     """Lê o arquivo de pesquisa gerado na etapa 1."""
-    hoje = date.today().isoformat()
+    hoje = hoje_brt().isoformat()
     caminho = f"pesquisa/tendencias-{hoje}.md"
     with open(caminho, "r", encoding="utf-8") as f:
         return f.read()
@@ -569,7 +570,7 @@ def salvar_copy(
     texto: str, pilar: str, template: str, framework_legenda: str, tema: str, vies: str, formato: str,
     pauta_do_dia: dict, destaque_titulo: str = "",
 ) -> str:
-    hoje = date.today().isoformat()
+    hoje = hoje_brt().isoformat()
     pasta = f"conteudo/posts-{hoje}"
     os.makedirs(pasta, exist_ok=True)
     caminho = f"{pasta}/copy.md"

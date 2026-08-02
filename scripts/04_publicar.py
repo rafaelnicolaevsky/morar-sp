@@ -23,12 +23,13 @@ from scripts.utils.api_instagram import (
     esperar_container_pronto,
     publicar_container,
 )
+from scripts.utils.data_brt import hoje_brt
 from scripts.utils.historico_temas import registrar_tema
 from scripts.utils.hospedagem_midia import publicar_imagens_no_repo_midia
 
 
 def ler_copy_do_dia() -> str:
-    hoje = date.today().isoformat()
+    hoje = hoje_brt().isoformat()
     with open(f"conteudo/posts-{hoje}/copy.md", "r", encoding="utf-8") as f:
         return f.read()
 
@@ -68,7 +69,7 @@ def ler_cabecalho_do_dia(copy_md: str) -> dict:
 
 
 def listar_imagens_do_dia() -> list[str]:
-    hoje = date.today().isoformat()
+    hoje = hoje_brt().isoformat()
     pasta = Path(f"conteudo/posts-{hoje}/carrossel")
     imagens = sorted(
         pasta.glob("slide-*.png"),
@@ -80,7 +81,7 @@ def listar_imagens_do_dia() -> list[str]:
 
 
 def registrar_log(resultado: dict) -> None:
-    hoje = date.today().isoformat()
+    hoje = hoje_brt().isoformat()
     Path("logs").mkdir(parents=True, exist_ok=True)
     with open("logs/publicacoes.md", "a", encoding="utf-8") as f:
         f.write(f"\n## {hoje}\n{resultado}\n")
@@ -114,7 +115,7 @@ if __name__ == "__main__":
 
     if cabecalho["tema"] and cabecalho["vies"]:
         registrar_tema(
-            cabecalho["tema"], cabecalho["vies"], cabecalho["pilar"], date.today().isoformat(),
+            cabecalho["tema"], cabecalho["vies"], cabecalho["pilar"], hoje_brt().isoformat(),
             categoria=cabecalho["categoria"] or None,
             vies_estrutural=cabecalho["vies_estrutural"] or None,
             bairro_alvo=cabecalho["bairro_alvo"] or None,
@@ -124,6 +125,6 @@ if __name__ == "__main__":
     # Marca a pasta do dia como publicada de verdade — só chega aqui se
     # tudo acima rodou sem exceção. scripts/limpar_execucoes_antigas.py só
     # apaga pastas com esse marcador, nunca um dia que falhou.
-    (Path(f"conteudo/posts-{date.today().isoformat()}") / ".publicado").touch()
+    (Path(f"conteudo/posts-{hoje_brt().isoformat()}") / ".publicado").touch()
 
     print(f"Publicado: {resultado}")

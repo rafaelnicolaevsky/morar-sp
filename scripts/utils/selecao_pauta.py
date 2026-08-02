@@ -42,6 +42,7 @@ from config.categorias_bairros import (
     PESOS_CATEGORIAS_ATRACAO,
     VIESES_POR_PILAR,
 )
+from scripts.utils.data_brt import hoje_brt
 from scripts.utils.historico_temas import temas_recentes_para_prompt
 from scripts.utils.regiao import carregar_regiao_foco
 
@@ -49,7 +50,7 @@ PESOS_PILARES = {"atracao": 50, "compra_venda": 25, "investimento": 25}
 
 
 def _caminho_pauta_do_dia() -> Path:
-    hoje = date.today().isoformat()
+    hoje = hoje_brt().isoformat()
     return RAIZ / "conteudo" / f"posts-{hoje}" / "pauta.json"
 
 

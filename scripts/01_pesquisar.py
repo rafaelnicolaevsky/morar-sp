@@ -19,6 +19,7 @@ import requests
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from config.distritos_sp import NOMES_AMBIGUOS
 from config.categorias_bairros import PALAVRAS_CHAVE_CATEGORIA
+from scripts.utils.data_brt import hoje_brt
 from scripts.utils.regiao import buscar_mencoes_google_news, relevante_para_categoria
 from scripts.utils.selecao_pauta import carregar_ou_selecionar_pauta_do_dia
 
@@ -175,7 +176,7 @@ def pesquisar_tendencias(pauta: dict) -> str:
     utils/selecao_pauta.carregar_ou_selecionar_pauta_do_dia() — a mesma
     pauta usada por scripts/02_gerar_copy.py.
     """
-    hoje = date.today().isoformat()
+    hoje = hoje_brt().isoformat()
     secoes = [f"# Pesquisa de tendências — {hoje}\n"]
 
     secoes.append(_secao_atracao_categoria(pauta))
@@ -203,7 +204,7 @@ def pesquisar_tendencias(pauta: dict) -> str:
 
 def salvar_pesquisa(conteudo: str) -> str:
     """Salva o resultado da pesquisa em pesquisa/tendencias-YYYY-MM-DD.md"""
-    hoje = date.today().isoformat()
+    hoje = hoje_brt().isoformat()
     Path("pesquisa").mkdir(parents=True, exist_ok=True)
     caminho = f"pesquisa/tendencias-{hoje}.md"
     with open(caminho, "w", encoding="utf-8") as f:

@@ -63,6 +63,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.utils.data_brt import hoje_brt
 from scripts.utils.formato import escolher_formato_post
 from scripts.utils.imagens_fundo import buscar_foto_de_fundo
 from scripts.utils.regiao import carregar_regiao_foco
@@ -522,7 +523,7 @@ window.__quebrarTitulo = function (h1el, modo) {
 
 
 def ler_copy_do_dia() -> str:
-    hoje = date.today().isoformat()
+    hoje = hoje_brt().isoformat()
     caminho = f"conteudo/posts-{hoje}/copy.md"
     with open(caminho, "r", encoding="utf-8") as f:
         return f.read()
@@ -699,7 +700,7 @@ def gerar_carrossel(dados_copy: dict, estilo: str, formato: str = "carrossel") -
             termo_especifico = None
     foto_url = buscar_foto_de_fundo(dados_copy["pilar"], termo_especifico)
 
-    hoje = date.today().isoformat()
+    hoje = hoje_brt().isoformat()
     pasta = f"conteudo/posts-{hoje}/carrossel"
     os.makedirs(pasta, exist_ok=True)
 
