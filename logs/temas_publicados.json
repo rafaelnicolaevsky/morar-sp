@@ -16,5 +16,14 @@
     "vies": "contraste entre a valorização do imóvel no fim da obra e o incômodo/desvalorização temporária durante a obra (os dois lados)",
     "pilar": "compra_venda",
     "data": "2026-07-28"
+  },
+  {
+    "tema": "estoque de imóveis à venda em São Paulo",
+    "vies": "mais estoque disponível favorece quem compra o primeiro imóvel, dando poder de negociação e tempo pra pesquisar",
+    "pilar": "compra_venda",
+    "data": "2026-08-02",
+    "categoria": null,
+    "vies_estrutural": "comprador",
+    "bairro_alvo": "Vila Mariana | destaque_titulo: isso é bom ou ruim"
   }
 ]
