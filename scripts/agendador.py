@@ -20,23 +20,24 @@ partir da data, sem depender de arquivo nenhum. A exclusão de "turno de
 ontem" recalcula o plano de ontem com a MESMA função (profundidade
 máxima 1 — o ciclo 2-1-2-1 nunca tem dois dias de 1 post seguidos).
 
-Horários adiantados em 1h em 02/08/2026 (pedido do usuário) — o GitHub
-Actions atrasa gatilhos cron de forma imprevisível (~1h-1h45 observado
-no primeiro dia real). Aproveitado pra também mover o candidato
-"14:50" pra "13:55" (antes do adiantamento) — colidia com um horário
-do garimpinhos, que também usa 14:50.
+03/08/2026: voltou aos horários originais (sem adiantar 1h) — o
+`schedule:` nativo do GitHub Actions foi desativado (atrasava de forma
+imprevisível e gastava minutos à toa) e substituído por um Google Apps
+Script externo que chama workflow_dispatch nos horários exatos abaixo.
+O candidato "14:50" continua como "14:55" — colide com um horário do
+garimpinhos (14:50), então fica assim mesmo revertendo o resto.
 
 Cada um dos 9 horários (3 turnos x 3 candidatos) é uma tarefa separada
 no Agendador de Tarefas do Windows / GitHub Actions:
-    python scripts/agendador.py manha 07:15
-    python scripts/agendador.py manha 08:00
-    python scripts/agendador.py manha 08:45
-    python scripts/agendador.py tarde 13:00
-    python scripts/agendador.py tarde 13:55
-    python scripts/agendador.py tarde 14:40
-    python scripts/agendador.py noite 18:30
-    python scripts/agendador.py noite 19:15
-    python scripts/agendador.py noite 20:00
+    python scripts/agendador.py manha 08:15
+    python scripts/agendador.py manha 09:00
+    python scripts/agendador.py manha 09:45
+    python scripts/agendador.py tarde 14:00
+    python scripts/agendador.py tarde 14:55
+    python scripts/agendador.py tarde 15:40
+    python scripts/agendador.py noite 19:30
+    python scripts/agendador.py noite 20:15
+    python scripts/agendador.py noite 21:00
 
 Se o turno não estiver no plano de hoje, ou o horário não for o sorteado
 pra esse turno hoje, encerra sem fazer nada.
@@ -69,9 +70,9 @@ DATA_EPOCA = date(2026, 7, 27)  # dia 1 do ciclo (2 posts)
 # Candidatos fixos por turno — migrados das janelas reais de RandomDelay
 # do Windows (manhã 08:00-10:25, tarde 13:45-16:10, noite 19:15-21:25).
 HORARIOS_POR_TURNO = {
-    "manha": ["07:15", "08:00", "08:45"],
-    "tarde": ["13:00", "13:55", "14:40"],
-    "noite": ["18:30", "19:15", "20:00"],
+    "manha": ["08:15", "09:00", "09:45"],
+    "tarde": ["14:00", "14:55", "15:40"],
+    "noite": ["19:30", "20:15", "21:00"],
 }
 
 ETAPAS_PIPELINE = [
