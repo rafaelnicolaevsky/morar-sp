@@ -11,21 +11,22 @@ name: publicar
 # Playwright/etc. e roda o pipeline de verdade se o horário bater.
 # agendador.py só usa biblioteca padrão do Python.
 #
-# Horários adiantados em 1h em 02/08/2026 (pedido do usuário) — o
-# GitHub Actions atrasa gatilhos cron de forma imprevisível (~1h-1h45
-# observado no primeiro dia real). Aproveitado pra mover "14:50" pra
-# "13:55" (antes do adiantamento) — colidia com o garimpinhos.
+# PAUSADO em 03/08/2026 (pedido do usuário): o schedule: nativo do
+# GitHub Actions atrasa de forma imprevisível (~1h-1h45 observado) e
+# gasta minutos à toa. Substituído por um Google Apps Script (gatilho
+# de tempo) que chama workflow_dispatch nos mesmos horários abaixo.
+# on:
+#   schedule:
+#     - cron: "15 10 * * *"  # manhã 07:15 BRT
+#     - cron: "0 11 * * *"   # manhã 08:00 BRT
+#     - cron: "45 11 * * *"  # manhã 08:45 BRT
+#     - cron: "0 16 * * *"   # tarde 13:00 BRT
+#     - cron: "55 16 * * *"  # tarde 13:55 BRT
+#     - cron: "40 17 * * *"  # tarde 14:40 BRT
+#     - cron: "30 21 * * *"  # noite 18:30 BRT
+#     - cron: "15 22 * * *"  # noite 19:15 BRT
+#     - cron: "0 23 * * *"   # noite 20:00 BRT
 on:
-  schedule:
-    - cron: "15 10 * * *"  # manhã 07:15 BRT
-    - cron: "0 11 * * *"   # manhã 08:00 BRT
-    - cron: "45 11 * * *"  # manhã 08:45 BRT
-    - cron: "0 16 * * *"   # tarde 13:00 BRT
-    - cron: "55 16 * * *"  # tarde 13:55 BRT
-    - cron: "40 17 * * *"  # tarde 14:40 BRT
-    - cron: "30 21 * * *"  # noite 18:30 BRT
-    - cron: "15 22 * * *"  # noite 19:15 BRT
-    - cron: "0 23 * * *"   # noite 20:00 BRT
   workflow_dispatch:
     inputs:
       turno:
