@@ -43,5 +43,14 @@
     "categoria": null,
     "vies_estrutural": "comprador",
     "bairro_alvo": "Vila Mariana | destaque_titulo: custar (ou economizar)"
+  },
+  {
+    "tema": "collab entre cafeteria e marca de decoração no Itaim Bibi",
+    "vies": "o café deixou de ser só bebida e virou experiência estética, reflexo de um movimento maior de fusão entre design e gastronomia no bairro",
+    "pilar": "atracao",
+    "data": "2026-08-04",
+    "categoria": "gastronomia",
+    "vies_estrutural": null,
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: design"
   }
 ]
