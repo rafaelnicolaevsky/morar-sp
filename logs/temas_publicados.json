@@ -34,5 +34,14 @@
     "categoria": null,
     "vies_estrutural": "vendedor",
     "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "financiamento imobiliário (SFH vs SFI)",
+    "vies": "a escolha entre financiamento com teto de juros (SFH) e sem teto (SFI) impacta diretamente quem compra o primeiro imóvel em bairros com metro quadrado mais caro, como a Vila Mariana",
+    "pilar": "compra_venda",
+    "data": "2026-08-04",
+    "categoria": null,
+    "vies_estrutural": "comprador",
+    "bairro_alvo": "Vila Mariana | destaque_titulo: custar (ou economizar)"
   }
 ]
