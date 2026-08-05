@@ -52,5 +52,14 @@
     "categoria": "gastronomia",
     "vies_estrutural": null,
     "bairro_alvo": "Itaim Bibi | destaque_titulo: design"
+  },
+  {
+    "tema": "infraestrutura urbana (saneamento) como fator de valorização do aluguel",
+    "vies": "o saneamento básico funciona como sinalizador da qualidade geral da infraestrutura de uma região, o que explica por que bairros consolidados como o Itaim Bibi sustentam aluguéis altos mesmo sem esse dado aparecer nos anúncios",
+    "pilar": "investimento",
+    "data": "2026-08-05",
+    "categoria": null,
+    "vies_estrutural": "investidor_aluguel",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
   }
 ]
