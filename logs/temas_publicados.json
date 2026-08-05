@@ -61,5 +61,14 @@
     "categoria": null,
     "vies_estrutural": "investidor_aluguel",
     "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "fiscalização de aluguel de temporada irregular em São Paulo",
+    "vies": "a repressão a anúncios irregulares muda o perfil de comprador que procura imóveis no Itaim Bibi, favorecendo quem vende com documentação regularizada",
+    "pilar": "compra_venda",
+    "data": "2026-08-05",
+    "categoria": null,
+    "vies_estrutural": "vendedor",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
   }
 ]
