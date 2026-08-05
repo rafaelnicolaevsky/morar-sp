@@ -70,5 +70,14 @@
     "categoria": null,
     "vies_estrutural": "vendedor",
     "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "financiamento vs consórcio para o primeiro imóvel",
+    "vies": "o estoque recorde de imóveis em SP muda o peso da decisão entre esperar pelo consórcio (sem juros) ou financiar já (com juros), porque tempo de espera tem custo de oportunidade",
+    "pilar": "compra_venda",
+    "data": "2026-08-05",
+    "categoria": null,
+    "vies_estrutural": "comprador",
+    "bairro_alvo": "Vila Prudente | destaque_titulo: não identificado"
   }
 ]
