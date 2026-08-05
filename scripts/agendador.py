@@ -1,24 +1,21 @@
 """
 Agendador: decide se o turno/horário atual deve publicar hoje.
 
-Regras (definidas com o usuário):
-- Ciclo de quantidade por dia: 2, 1, 2, 1, 2, 1... (nunca muda de ordem)
-- 3 turnos possíveis: manhã, tarde, noite
-- A cada dia, sorteia quais turnos publicam (respeitando a quantidade do
-  ciclo), evitando repetir o(s) turno(s) usado(s) no dia anterior
-- Horário exato dentro de cada turno: sorteado entre 3 candidatos fixos
-  por turno (ver HORARIOS_POR_TURNO) — migrado de RandomDelay do Windows
-  Task Scheduler (01/08/2026, mudança pro GitHub Actions, que não tem
-  equivalente nativo de "atraso aleatório").
+Regras (mudou 04/08/2026, pedido do usuário: "6 publicações diárias, duas
+por turno todos os dias, como no perfil de frases" — mesmo padrão do
+lembrei-instagram):
+- Todo dia, os 3 turnos (manhã/tarde/noite) publicam sempre — sem ciclo
+  de quantidade nem exclusão de turno do dia anterior (isso era da regra
+  antiga, removida).
+- Cada turno publica 2 vezes por dia, escolhidas dentre os 3 candidatos
+  fixos de HORARIOS_POR_TURNO — a JANELA de quais 2 rotaciona por dia
+  (mesma fórmula do lembrei-instagram/scripts/agendador.py:
+  horarios_de_hoje), pra não ser sempre os 2 mesmos horários.
 
 Determinístico por data (semente = a própria data), não mais um arquivo
-de estado persistido (config/agenda_estado.json) — pedido implícito da
-migração pro GitHub Actions: cada disparo roda numa máquina limpa, sem
-estado compartilhado entre execuções, então o plano do dia (e do dia
-anterior, pra excluir o turno de ontem) precisa ser recalculável puro a
-partir da data, sem depender de arquivo nenhum. A exclusão de "turno de
-ontem" recalcula o plano de ontem com a MESMA função (profundidade
-máxima 1 — o ciclo 2-1-2-1 nunca tem dois dias de 1 post seguidos).
+de estado persistido — cada disparo do GitHub Actions roda numa máquina
+limpa, sem estado compartilhado entre execuções, então o plano do dia
+precisa ser recalculável puro a partir da data.
 
 03/08/2026: voltou aos horários originais (sem adiantar 1h) — o
 `schedule:` nativo do GitHub Actions foi desativado (atrasava de forma
@@ -27,8 +24,9 @@ Script externo que chama workflow_dispatch nos horários exatos abaixo.
 O candidato "14:50" continua como "14:55" — colide com um horário do
 garimpinhos (14:50), então fica assim mesmo revertendo o resto.
 
-Cada um dos 9 horários (3 turnos x 3 candidatos) é uma tarefa separada
-no Agendador de Tarefas do Windows / GitHub Actions:
+Cada um dos 9 horários (3 turnos x 3 candidatos) é uma tarefa separada no
+GitHub Actions (o Apps Script já dispara todos os 9 todo dia — mudar
+pra "2 de 3 por turno" não exige nenhum ajuste lá, só aqui):
     python scripts/agendador.py manha 08:15
     python scripts/agendador.py manha 09:00
     python scripts/agendador.py manha 09:45
@@ -39,11 +37,10 @@ no Agendador de Tarefas do Windows / GitHub Actions:
     python scripts/agendador.py noite 20:15
     python scripts/agendador.py noite 21:00
 
-Se o turno não estiver no plano de hoje, ou o horário não for o sorteado
-pra esse turno hoje, encerra sem fazer nada.
+Se o horário não estiver entre os 2 sorteados pra esse turno hoje,
+encerra sem fazer nada (todo turno sempre está "no plano" agora).
 """
 
-import random
 import subprocess
 import sys
 from datetime import date, datetime, timedelta, timezone
@@ -65,7 +62,7 @@ def hoje_brt() -> date:
 
 
 TURNOS = ["manha", "tarde", "noite"]
-DATA_EPOCA = date(2026, 7, 27)  # dia 1 do ciclo (2 posts)
+DATA_EPOCA = date(2026, 7, 27)  # dia 0 da rotação de horários (sem efeito na quantidade, todo dia é 2 por turno)
 
 # Candidatos fixos por turno — migrados das janelas reais de RandomDelay
 # do Windows (manhã 08:00-10:25, tarde 13:45-16:10, noite 19:15-21:25).
@@ -84,31 +81,29 @@ ETAPAS_PIPELINE = [
 ]
 
 
-def _quantidade_do_dia(dia: date) -> int:
-    """Ciclo 2-1-2-1... a partir da DATA_EPOCA (dia 0 = 2 posts, dia 1 = 1 post, ...)."""
-    dias_desde_epoca = (dia - DATA_EPOCA).days
-    return 2 if dias_desde_epoca % 2 == 0 else 1
+def _horarios_do_turno_hoje(turno: str, dia: date) -> list[str]:
+    """
+    2 dos 3 candidatos fixos do turno, com a JANELA deslizando por dia —
+    mesma fórmula do lembrei-instagram/scripts/agendador.py
+    (horarios_de_hoje): garante variedade dia a dia mesmo com só 3
+    candidatos (a janela de 2 "roda" pelos 3 em sequência: dias 0,1,2,3...
+    começam nos índices 0,2,1,0,...).
+    """
+    candidatos = HORARIOS_POR_TURNO[turno]
+    n = len(candidatos)
+    indice_dia = (dia - DATA_EPOCA).days
+    inicio = (indice_dia * 2) % n
+    return [candidatos[inicio % n], candidatos[(inicio + 1) % n]]
 
 
 def plano_de_hoje(dia: date) -> dict:
-    """Plano determinístico de turnos+horários pra uma data — semente = a própria data."""
-    rnd = random.Random(f"plano-morarsp-{dia.isoformat()}")
-    quantidade = _quantidade_do_dia(dia)
-
-    # A exclusão de "turno de ontem" só é matematicamente possível (e faz
-    # sentido) em dias de 1 post: excluir até 2 turnos de um total de 3
-    # ainda deixa 1 candidato válido. Em dias de 2 posts, sorteia livremente
-    # entre os 3 turnos, sem exclusão (ver histórico do projeto).
-    if quantidade == 1:
-        turnos_ontem = set(plano_de_hoje(dia - timedelta(days=1))["turnos"])
-        candidatos = [t for t in TURNOS if t not in turnos_ontem] or TURNOS[:]
-        turnos_hoje = [rnd.choice(candidatos)]
-    else:
-        turnos_hoje = rnd.sample(TURNOS, quantidade)
-
-    horarios_hoje = {turno: rnd.choice(HORARIOS_POR_TURNO[turno]) for turno in turnos_hoje}
-
-    return {"data": dia.isoformat(), "quantidade": quantidade, "turnos": turnos_hoje, "horarios": horarios_hoje}
+    """
+    Plano determinístico pra uma data — todo dia os 3 turnos publicam,
+    2 vezes cada (pedido do usuário, 04/08/2026: "6 publicações diárias,
+    duas por turno todos os dias, como no perfil de frases").
+    """
+    horarios_hoje = {turno: _horarios_do_turno_hoje(turno, dia) for turno in TURNOS}
+    return {"data": dia.isoformat(), "quantidade": 6, "turnos": TURNOS[:], "horarios": horarios_hoje}
 
 
 def rodar_pipeline() -> None:
@@ -131,12 +126,8 @@ if __name__ == "__main__":
 
     print(f"Plano de hoje ({hoje}): {plano['quantidade']} post(s), turnos: {plano['turnos']}, horarios: {plano['horarios']}")
 
-    if turno_atual not in plano["turnos"]:
-        print(f"Turno '{turno_atual}' não está no plano de hoje. Encerrando sem publicar.")
-        sys.exit(0)
-
-    if plano["horarios"].get(turno_atual) != horario_atual:
-        print(f"Horário sorteado hoje pro turno '{turno_atual}' é {plano['horarios'].get(turno_atual)}, não {horario_atual}. Encerrando.")
+    if horario_atual not in plano["horarios"].get(turno_atual, []):
+        print(f"Horários sorteados hoje pro turno '{turno_atual}' são {plano['horarios'].get(turno_atual)}, não inclui {horario_atual}. Encerrando.")
         sys.exit(0)
 
     print(f"Turno '{turno_atual}' às {horario_atual} confirmado. Rodando o pipeline...")

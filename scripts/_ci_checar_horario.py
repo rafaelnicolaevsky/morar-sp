@@ -18,5 +18,5 @@ if __name__ == "__main__":
     turno = os.environ["TURNO"]
     horario = os.environ["HORARIO"]
     plano = plano_de_hoje(hoje)
-    deve_publicar = turno in plano["turnos"] and plano["horarios"].get(turno) == horario
+    deve_publicar = horario in plano["horarios"].get(turno, [])
     print("true" if deve_publicar else "false")
