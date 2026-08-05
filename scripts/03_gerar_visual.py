@@ -591,12 +591,14 @@ def escolher_estilo_visual() -> str:
 
 def _aplicar_destaque(titulo: str, destaque_titulo: str) -> str:
     """
-    Envolve a(s) palavra(s) de destaque (ver '## Destaque do título' na
-    etapa 2) num <span class="destaque"> — pedido do usuário, 01/08/2026:
-    colorir a palavra mais importante do título na cor do eyebrow/pilar.
-    Match exato (case-sensitive, o prompt pede cópia literal); se não achar
-    a substring no título, devolve sem destaque (degradação graciosa, nunca
-    quebra o post por causa disso).
+    Envolve o período de destaque (ver '## Destaque do título' na etapa 2)
+    num <span class="destaque"> — pedido do usuário, 01/08/2026: colorir
+    o trecho mais importante do título na cor do eyebrow/pilar. Desde
+    04/08/2026, sempre um PERÍODO INTEIRO (da maiúscula que abre a frase
+    até o ponto/sinal que a separa da próxima), não mais 1-3 palavras
+    soltas. Match exato (case-sensitive, o prompt pede cópia literal); se
+    não achar a substring no título, devolve sem destaque (degradação
+    graciosa, nunca quebra o post por causa disso).
     """
     if not destaque_titulo or destaque_titulo not in titulo:
         return titulo

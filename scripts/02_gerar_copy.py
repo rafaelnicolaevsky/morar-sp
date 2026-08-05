@@ -407,14 +407,17 @@ Declare também, de forma explícita e curta:
   de "quem compra antes do metrô abrir historicamente sai ganhando") —
   este é o que NÃO pode repetir a combinação com o tema (ver histórico
   acima).
-- "Destaque do título": 1 a 3 palavras — copiadas EXATAMENTE como aparecem
-  no título geral (mesma grafia/acentuação) — que são a palavra ou
-  palavras mais importantes do título, pra receberem cor de destaque na
-  imagem. Escolha a palavra que carrega o gancho/tensão central (ex.: no
-  título "46ª Festa das Cerejeiras: por que esse evento nunca sai de
-  moda?", destacar "nunca sai de moda" ou só "moda" — não destaque
-  artigos/preposições soltos, e nunca destaque o bairro/região sozinho se
-  ele não for o ponto central da frase).
+- "Destaque do título": SEMPRE um PERÍODO INTEIRO (pedido do usuário,
+  04/08/2026) — copiado EXATAMENTE como aparece no título geral (mesma
+  grafia/acentuação/pontuação) — do início do período mais importante do
+  título (a primeira letra maiúscula que abre a frase) até o ponto ou
+  sinal de pontuação que separa a próxima frase (inclui esse sinal de
+  fechamento). Escolha o período que carrega o gancho/tensão central do
+  título. Ex.: no título "46ª Festa das Cerejeiras: por que esse evento
+  nunca sai de moda?", se esse for o período mais importante, destaque
+  "Por que esse evento nunca sai de moda?" inteiro (com a interrogação);
+  num título com 2+ frases, escolha só UMA (a mais importante), nunca o
+  título inteiro se ele tiver mais de um período.
 
 Responda SOMENTE em markdown, neste formato exato (### só aparece do
 slide 2 em diante — o slide 1 não usa, ele já tem o título geral do "#").
