@@ -88,5 +88,14 @@
     "categoria": null,
     "vies_estrutural": "investidor_valorizacao",
     "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "vacância mínima de escritórios corporativos em SP",
+    "vies": "a demanda corporativa recorde no Itaim Bibi cria um contexto favorável pra quem vende imóvel residencial no bairro, pelo efeito de proximidade trabalho-moradia",
+    "pilar": "compra_venda",
+    "data": "2026-08-06",
+    "categoria": null,
+    "vies_estrutural": "vendedor",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
   }
 ]
