@@ -79,5 +79,14 @@
     "categoria": null,
     "vies_estrutural": "comprador",
     "bairro_alvo": "Vila Prudente | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "reajuste de aluguel como indicador de valorização",
+    "vies": "o salto no índice de aluguel funciona como termômetro antecipado da valorização do imóvel no médio/longo prazo, especialmente em bairros com oferta restrita como o Itaim Bibi",
+    "pilar": "investimento",
+    "data": "2026-08-06",
+    "categoria": null,
+    "vies_estrutural": "investidor_valorizacao",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
   }
 ]
