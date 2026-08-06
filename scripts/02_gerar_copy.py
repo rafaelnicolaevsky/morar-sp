@@ -43,14 +43,17 @@ MODELO = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5")
 MAX_TOKENS_TETO = 1536
 
 TEMPLATES_POR_PILAR = {
-    "atracao": ["descubra_bairro", "achado_local"],
+    "atracao": ["descubra_bairro", "achado_local", "guia_categoria"],
     "compra_venda": ["voce_sabia", "comparativo", "dica_pratica"],
     "investimento": ["voce_sabia", "opiniao_de_mercado", "dica_pratica"],
 }
 # Templates que NÃO dependem de pauta pesquisada — geram conteúdo evergreen
 # direto (guia prático, listicle). Mantêm o pilar disponível mesmo em dias
-# sem nenhuma notícia/pauta relevante encontrada.
-TEMPLATES_SEM_PAUTA = {"dica_pratica"}
+# sem nenhuma notícia/pauta relevante encontrada. "atracao" precisava de um
+# evergreen próprio (achado real, 05/08/2026: com o pilar rodando com mais
+# frequência desde a mudança pra 6 posts/dia, a pesquisa do dia às vezes não
+# traz nada pra ele e o pipeline quebrava por falta de fallback).
+TEMPLATES_SEM_PAUTA = {"dica_pratica", "guia_categoria"}
 
 TEMPLATE_INSTRUCOES = {
     "voce_sabia": (
@@ -99,9 +102,25 @@ TEMPLATE_INSTRUCOES = {
         "= 1 dica objetiva, sem enrolação — precisa ser útil o bastante pra alguém "
         "salvar mesmo sem contexto de notícia nenhuma."
     ),
+    "guia_categoria": (
+        "Formato 'guia da categoria' — LISTICLE EVERGREEN, não depende de notícia/"
+        "pauta do dia (usa só a categoria e o bairro-alvo de hoje, já definidos "
+        "independente da pesquisa): gere de 3 a 5 dicas ou critérios práticos pra "
+        "aproveitar bem essa categoria nesse bairro, sem citar nenhum "
+        "estabelecimento/evento/lugar específico (não é sobre um achado concreto, "
+        "é um guia de como escolher/aproveitar bem). Ex.: categoria 'gastronomia' "
+        "vira 'o que olhar antes de escolher um restaurante novo no bairro X'; "
+        "categoria 'lazer ao ar livre' vira 'como aproveitar as áreas verdes do "
+        "bairro X sem crianças hoje'. Título com número. Cada slide intermediário "
+        "= 1 dica objetiva, sem enrolação — precisa ser útil o bastante pra alguém "
+        "salvar mesmo sem contexto de notícia nenhuma."
+    ),
 }
 
-TEMPLATES = ["voce_sabia", "comparativo", "opiniao_de_mercado", "descubra_bairro", "achado_local", "dica_pratica"]
+TEMPLATES = [
+    "voce_sabia", "comparativo", "opiniao_de_mercado", "descubra_bairro",
+    "achado_local", "dica_pratica", "guia_categoria",
+]
 
 # Frameworks de copywriting pra legenda (caption) — cada um baseado em
 # retórica/heurística de decisão validada, não fórmula genérica. Objetivo:
