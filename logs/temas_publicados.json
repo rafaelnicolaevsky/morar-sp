@@ -97,5 +97,14 @@
     "categoria": null,
     "vies_estrutural": "vendedor",
     "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "Eventos temáticos de entretenimento em parques urbanos",
+    "vies": "serviços de streaming escolhem o Parque Villa-Lobos por causa da infraestrutura e vocação de lazer que Alto de Pinheiros vem consolidando",
+    "pilar": "atracao",
+    "data": "2026-08-06",
+    "categoria": "lazer",
+    "vies_estrutural": null,
+    "bairro_alvo": "Alto de Pinheiros | destaque_titulo: E o motivo vai além de nostalgia."
   }
 ]
