@@ -106,5 +106,14 @@
     "categoria": "lazer",
     "vies_estrutural": null,
     "bairro_alvo": "Alto de Pinheiros | destaque_titulo: E o motivo vai além de nostalgia."
+  },
+  {
+    "tema": "reajuste do aluguel residencial (índice FGV)",
+    "vies": "dois meses consecutivos de alta no índice sinalizam que o reajuste contratual está ficando defasado em relação ao valor de mercado, especialmente em bairros de baixa vacância como o Itaim Bibi, o que exige revisão de contrato por parte de quem vive de renda de aluguel",
+    "pilar": "investimento",
+    "data": "2026-08-07",
+    "categoria": null,
+    "vies_estrutural": "investidor_aluguel",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
   }
 ]
