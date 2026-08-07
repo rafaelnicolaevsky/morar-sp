@@ -115,5 +115,14 @@
     "categoria": null,
     "vies_estrutural": "investidor_aluguel",
     "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "fiscalização de aluguel de temporada em imóveis sociais em São Paulo",
+    "vies": "a fiscalização contra uso irregular de imóveis sociais reforça a segurança documental que quem compra o primeiro imóvel busca em bairros consolidados como a Vila Mariana",
+    "pilar": "compra_venda",
+    "data": "2026-08-07",
+    "categoria": null,
+    "vies_estrutural": "comprador",
+    "bairro_alvo": "Vila Mariana | destaque_titulo: Mais de 1.600 anúncios caíram de uma vez só."
   }
 ]
