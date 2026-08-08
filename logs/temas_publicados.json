@@ -151,5 +151,14 @@
     "categoria": null,
     "vies_estrutural": "comprador",
     "bairro_alvo": "Tatuapé | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "inadimplência de aluguel como risco pra renda de proprietário",
+    "vies": "o mesmo mecanismo que eleva o índice de reajuste do aluguel também eleva o risco de inadimplência, o que exige que quem vive de renda de aluguel no Itaim Bibi separe vacância baixa (demanda) de capacidade de pagamento do inquilino (risco)",
+    "pilar": "investimento",
+    "data": "2026-08-08",
+    "categoria": null,
+    "vies_estrutural": "investidor_aluguel",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
   }
 ]
