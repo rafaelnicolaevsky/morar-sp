@@ -124,5 +124,14 @@
     "categoria": null,
     "vies_estrutural": "comprador",
     "bairro_alvo": "Vila Mariana | destaque_titulo: Mais de 1.600 anúncios caíram de uma vez só."
+  },
+  {
+    "tema": "restrição de aluguel por temporada em condomínios (decisão do STJ)",
+    "vies": "a decisão do STJ sobre temporada reduz a oferta desse tipo de aluguel em bairros como o Itaim Bibi, o que tende a concentrar valorização nos imóveis que ainda podem operar assim e pressionar o aluguel tradicional nos demais",
+    "pilar": "investimento",
+    "data": "2026-08-07",
+    "categoria": null,
+    "vies_estrutural": "investidor_valorizacao",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
   }
 ]
