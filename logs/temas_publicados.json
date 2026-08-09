@@ -160,5 +160,14 @@
     "categoria": null,
     "vies_estrutural": "investidor_aluguel",
     "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "restrição de aluguel por temporada em condomínios (decisão do STJ)",
+    "vies": "a decisão do STJ concentra a modalidade de temporada em menos prédios, o que empurra demanda de volta pro aluguel tradicional e reforça a valorização do imóvel de longo prazo em bairros de baixa vacância como o Itaim Bibi",
+    "pilar": "investimento",
+    "data": "2026-08-09",
+    "categoria": null,
+    "vies_estrutural": "investidor_valorizacao",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
   }
 ]
