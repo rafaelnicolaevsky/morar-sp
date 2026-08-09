@@ -169,5 +169,14 @@
     "categoria": null,
     "vies_estrutural": "investidor_valorizacao",
     "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "golpe do falso aluguel",
+    "vies": "a baixa vacância e alta demanda por aluguel em bairros como o Itaim Bibi criam a pressa que golpistas exploram para aplicar fraudes via Pix antes da visita ao imóvel",
+    "pilar": "compra_venda",
+    "data": "2026-08-09",
+    "categoria": null,
+    "vies_estrutural": "vendedor",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: O anúncio parecia perfeito, o Pix sumiu em segundos."
   }
 ]
