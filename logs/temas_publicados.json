@@ -178,5 +178,14 @@
     "categoria": null,
     "vies_estrutural": "vendedor",
     "bairro_alvo": "Itaim Bibi | destaque_titulo: O anúncio parecia perfeito, o Pix sumiu em segundos."
+  },
+  {
+    "tema": "golpe do falso aluguel",
+    "vies": "a alta demanda por aluguel em bairros residenciais consolidados como a Saúde cria a pressa que os golpistas exploram pra aplicar fraudes via Pix antes da visita ao imóvel, atingindo diretamente quem busca o primeiro imóvel pra morar",
+    "pilar": "compra_venda",
+    "data": "2026-08-09",
+    "categoria": null,
+    "vies_estrutural": "comprador",
+    "bairro_alvo": "Saúde | destaque_titulo: não identificado"
   }
 ]
