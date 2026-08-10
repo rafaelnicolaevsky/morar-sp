@@ -196,5 +196,14 @@
     "categoria": null,
     "vies_estrutural": "vendedor",
     "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "golpe do falso aluguel",
+    "vies": "o Pix elimina o intervalo de tempo que antes permitia desconfiar de um golpe, o que torna bairros de alta procura como o Tatuapé especialmente vulneráveis pra quem busca o primeiro imóvel",
+    "pilar": "compra_venda",
+    "data": "2026-08-10",
+    "categoria": null,
+    "vies_estrutural": "comprador",
+    "bairro_alvo": "Tatuapé | destaque_titulo: não identificado"
   }
 ]
