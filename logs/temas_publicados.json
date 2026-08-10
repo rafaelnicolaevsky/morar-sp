@@ -214,5 +214,14 @@
     "categoria": null,
     "vies_estrutural": "vendedor",
     "bairro_alvo": "Itaim Bibi | destaque_titulo: Vender agora ou esperar mais valorização?"
+  },
+  {
+    "tema": "documentação de compra do primeiro imóvel",
+    "vies": "listicle evergreen de checklist documental pra evitar golpe e problema jurídico na compra do primeiro imóvel, aplicado ao contexto de alta demanda por moradia na Saúde",
+    "pilar": "compra_venda",
+    "data": "2026-08-10",
+    "categoria": null,
+    "vies_estrutural": "comprador",
+    "bairro_alvo": "Saúde | destaque_titulo: não identificado"
   }
 ]
