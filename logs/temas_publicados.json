@@ -223,5 +223,14 @@
     "categoria": null,
     "vies_estrutural": "comprador",
     "bairro_alvo": "Saúde | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "aluguel de temporada vs aluguel tradicional no contexto do avanço de studios",
+    "vies": "o avanço nacional do modelo studio contrasta com a realidade do Itaim Bibi, onde a fiscalização crescente sobre temporada empurra quem investe em renda de aluguel de volta pro contrato tradicional",
+    "pilar": "investimento",
+    "data": "2026-08-10",
+    "categoria": null,
+    "vies_estrutural": "investidor_aluguel",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
   }
 ]
