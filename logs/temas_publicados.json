@@ -205,5 +205,14 @@
     "categoria": null,
     "vies_estrutural": "comprador",
     "bairro_alvo": "Tatuapé | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "dilema entre vender agora ou esperar mais valorização",
+    "vies": "o caso de valorização especulativa extrema na Costa del Sol (74% no m²) ilustra, por contraste, o dilema mais gradual mas real de quem vende no Itaim Bibi entre aproveitar a demanda atual (vacância corporativa baixa) ou esperar a valorização de longo prazo se consolidar, mesmo com estoque recorde pressionando preços",
+    "pilar": "compra_venda",
+    "data": "2026-08-10",
+    "categoria": null,
+    "vies_estrutural": "vendedor",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: Vender agora ou esperar mais valorização?"
   }
 ]
