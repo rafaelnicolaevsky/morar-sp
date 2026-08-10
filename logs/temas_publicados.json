@@ -187,5 +187,14 @@
     "categoria": null,
     "vies_estrutural": "comprador",
     "bairro_alvo": "Saúde | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "golpe do falso aluguel",
+    "vies": "o golpe não afeta só quem procura aluguel, o anúncio de quem vende ou aluga no Itaim Bibi também pode ser clonado e usado como isca sem o proprietário saber, gerando risco reputacional (pilar: compra_venda, viés estrutural: vendedor, bairro: Itaim Bibi)",
+    "pilar": "compra_venda",
+    "data": "2026-08-10",
+    "categoria": null,
+    "vies_estrutural": "vendedor",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
   }
 ]
