@@ -52,5 +52,194 @@
     "categoria": "gastronomia",
     "vies_estrutural": null,
     "bairro_alvo": "Itaim Bibi | destaque_titulo: design"
+  },
+  {
+    "tema": "infraestrutura urbana (saneamento) como fator de valorização do aluguel",
+    "vies": "o saneamento básico funciona como sinalizador da qualidade geral da infraestrutura de uma região, o que explica por que bairros consolidados como o Itaim Bibi sustentam aluguéis altos mesmo sem esse dado aparecer nos anúncios",
+    "pilar": "investimento",
+    "data": "2026-08-05",
+    "categoria": null,
+    "vies_estrutural": "investidor_aluguel",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "fiscalização de aluguel de temporada irregular em São Paulo",
+    "vies": "a repressão a anúncios irregulares muda o perfil de comprador que procura imóveis no Itaim Bibi, favorecendo quem vende com documentação regularizada",
+    "pilar": "compra_venda",
+    "data": "2026-08-05",
+    "categoria": null,
+    "vies_estrutural": "vendedor",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "financiamento vs consórcio para o primeiro imóvel",
+    "vies": "o estoque recorde de imóveis em SP muda o peso da decisão entre esperar pelo consórcio (sem juros) ou financiar já (com juros), porque tempo de espera tem custo de oportunidade",
+    "pilar": "compra_venda",
+    "data": "2026-08-05",
+    "categoria": null,
+    "vies_estrutural": "comprador",
+    "bairro_alvo": "Vila Prudente | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "reajuste de aluguel como indicador de valorização",
+    "vies": "o salto no índice de aluguel funciona como termômetro antecipado da valorização do imóvel no médio/longo prazo, especialmente em bairros com oferta restrita como o Itaim Bibi",
+    "pilar": "investimento",
+    "data": "2026-08-06",
+    "categoria": null,
+    "vies_estrutural": "investidor_valorizacao",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "vacância mínima de escritórios corporativos em SP",
+    "vies": "a demanda corporativa recorde no Itaim Bibi cria um contexto favorável pra quem vende imóvel residencial no bairro, pelo efeito de proximidade trabalho-moradia",
+    "pilar": "compra_venda",
+    "data": "2026-08-06",
+    "categoria": null,
+    "vies_estrutural": "vendedor",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "Eventos temáticos de entretenimento em parques urbanos",
+    "vies": "serviços de streaming escolhem o Parque Villa-Lobos por causa da infraestrutura e vocação de lazer que Alto de Pinheiros vem consolidando",
+    "pilar": "atracao",
+    "data": "2026-08-06",
+    "categoria": "lazer",
+    "vies_estrutural": null,
+    "bairro_alvo": "Alto de Pinheiros | destaque_titulo: E o motivo vai além de nostalgia."
+  },
+  {
+    "tema": "reajuste do aluguel residencial (índice FGV)",
+    "vies": "dois meses consecutivos de alta no índice sinalizam que o reajuste contratual está ficando defasado em relação ao valor de mercado, especialmente em bairros de baixa vacância como o Itaim Bibi, o que exige revisão de contrato por parte de quem vive de renda de aluguel",
+    "pilar": "investimento",
+    "data": "2026-08-07",
+    "categoria": null,
+    "vies_estrutural": "investidor_aluguel",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "fiscalização de aluguel de temporada em imóveis sociais em São Paulo",
+    "vies": "a fiscalização contra uso irregular de imóveis sociais reforça a segurança documental que quem compra o primeiro imóvel busca em bairros consolidados como a Vila Mariana",
+    "pilar": "compra_venda",
+    "data": "2026-08-07",
+    "categoria": null,
+    "vies_estrutural": "comprador",
+    "bairro_alvo": "Vila Mariana | destaque_titulo: Mais de 1.600 anúncios caíram de uma vez só."
+  },
+  {
+    "tema": "restrição de aluguel por temporada em condomínios (decisão do STJ)",
+    "vies": "a decisão do STJ sobre temporada reduz a oferta desse tipo de aluguel em bairros como o Itaim Bibi, o que tende a concentrar valorização nos imóveis que ainda podem operar assim e pressionar o aluguel tradicional nos demais",
+    "pilar": "investimento",
+    "data": "2026-08-07",
+    "categoria": null,
+    "vies_estrutural": "investidor_valorizacao",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "sinais de que é hora de vender o imóvel",
+    "vies": "listicle evergreen com critérios práticos e objetivos pra quem vende no Itaim Bibi identificar o momento certo de colocar o imóvel à venda, cruzando estoque recorde e vacância corporativa em queda",
+    "pilar": "compra_venda",
+    "data": "2026-08-08",
+    "categoria": null,
+    "vies_estrutural": "vendedor",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "diferença entre FIIs (fundos imobiliários) e mercado imobiliário físico",
+    "vies": "quem compra o primeiro imóvel pra morar (não pra investir em cota) não deve confundir queda de cota de FII na bolsa com sinal sobre o preço do imóvel físico, porque as duas coisas respondem a lógicas de precificação diferentes",
+    "pilar": "compra_venda",
+    "data": "2026-08-08",
+    "categoria": null,
+    "vies_estrutural": "comprador",
+    "bairro_alvo": "Tatuapé | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "inadimplência de aluguel como risco pra renda de proprietário",
+    "vies": "o mesmo mecanismo que eleva o índice de reajuste do aluguel também eleva o risco de inadimplência, o que exige que quem vive de renda de aluguel no Itaim Bibi separe vacância baixa (demanda) de capacidade de pagamento do inquilino (risco)",
+    "pilar": "investimento",
+    "data": "2026-08-08",
+    "categoria": null,
+    "vies_estrutural": "investidor_aluguel",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "restrição de aluguel por temporada em condomínios (decisão do STJ)",
+    "vies": "a decisão do STJ concentra a modalidade de temporada em menos prédios, o que empurra demanda de volta pro aluguel tradicional e reforça a valorização do imóvel de longo prazo em bairros de baixa vacância como o Itaim Bibi",
+    "pilar": "investimento",
+    "data": "2026-08-09",
+    "categoria": null,
+    "vies_estrutural": "investidor_valorizacao",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "golpe do falso aluguel",
+    "vies": "a baixa vacância e alta demanda por aluguel em bairros como o Itaim Bibi criam a pressa que golpistas exploram para aplicar fraudes via Pix antes da visita ao imóvel",
+    "pilar": "compra_venda",
+    "data": "2026-08-09",
+    "categoria": null,
+    "vies_estrutural": "vendedor",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: O anúncio parecia perfeito, o Pix sumiu em segundos."
+  },
+  {
+    "tema": "golpe do falso aluguel",
+    "vies": "a alta demanda por aluguel em bairros residenciais consolidados como a Saúde cria a pressa que os golpistas exploram pra aplicar fraudes via Pix antes da visita ao imóvel, atingindo diretamente quem busca o primeiro imóvel pra morar",
+    "pilar": "compra_venda",
+    "data": "2026-08-09",
+    "categoria": null,
+    "vies_estrutural": "comprador",
+    "bairro_alvo": "Saúde | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "golpe do falso aluguel",
+    "vies": "o golpe não afeta só quem procura aluguel, o anúncio de quem vende ou aluga no Itaim Bibi também pode ser clonado e usado como isca sem o proprietário saber, gerando risco reputacional (pilar: compra_venda, viés estrutural: vendedor, bairro: Itaim Bibi)",
+    "pilar": "compra_venda",
+    "data": "2026-08-10",
+    "categoria": null,
+    "vies_estrutural": "vendedor",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "golpe do falso aluguel",
+    "vies": "o Pix elimina o intervalo de tempo que antes permitia desconfiar de um golpe, o que torna bairros de alta procura como o Tatuapé especialmente vulneráveis pra quem busca o primeiro imóvel",
+    "pilar": "compra_venda",
+    "data": "2026-08-10",
+    "categoria": null,
+    "vies_estrutural": "comprador",
+    "bairro_alvo": "Tatuapé | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "dilema entre vender agora ou esperar mais valorização",
+    "vies": "o caso de valorização especulativa extrema na Costa del Sol (74% no m²) ilustra, por contraste, o dilema mais gradual mas real de quem vende no Itaim Bibi entre aproveitar a demanda atual (vacância corporativa baixa) ou esperar a valorização de longo prazo se consolidar, mesmo com estoque recorde pressionando preços",
+    "pilar": "compra_venda",
+    "data": "2026-08-10",
+    "categoria": null,
+    "vies_estrutural": "vendedor",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: Vender agora ou esperar mais valorização?"
+  },
+  {
+    "tema": "documentação de compra do primeiro imóvel",
+    "vies": "listicle evergreen de checklist documental pra evitar golpe e problema jurídico na compra do primeiro imóvel, aplicado ao contexto de alta demanda por moradia na Saúde",
+    "pilar": "compra_venda",
+    "data": "2026-08-10",
+    "categoria": null,
+    "vies_estrutural": "comprador",
+    "bairro_alvo": "Saúde | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "aluguel de temporada vs aluguel tradicional no contexto do avanço de studios",
+    "vies": "o avanço nacional do modelo studio contrasta com a realidade do Itaim Bibi, onde a fiscalização crescente sobre temporada empurra quem investe em renda de aluguel de volta pro contrato tradicional",
+    "pilar": "investimento",
+    "data": "2026-08-10",
+    "categoria": null,
+    "vies_estrutural": "investidor_aluguel",
+    "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "reajuste de aluguel comercial como indicador de valorização",
+    "vies": "o reajuste extremo de um contrato comercial de longo prazo revela, pelo mecanismo de vacância e demanda locacional, o mesmo motor que sustenta a valorização residencial em bairros de baixa vacância como Pinheiros",
+    "pilar": "investimento",
+    "data": "2026-08-10",
+    "categoria": null,
+    "vies_estrutural": "investidor_valorizacao",
+    "bairro_alvo": "Pinheiros | destaque_titulo: não identificado"
   }
 ]

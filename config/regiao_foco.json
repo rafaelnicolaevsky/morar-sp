@@ -1,60 +1,60 @@
 {
-  "regiao_principal": "Parque do Carmo",
+  "regiao_principal": "Aricanduva",
   "regioes_secundarias": [
-    "Barra Funda",
-    "Alto de Pinheiros"
+    "Pinheiros",
+    "Bela Vista"
   ],
-  "data_revisao": "2026-07-26",
+  "data_revisao": "2026-08-10",
   "top_10_ranking": [
     {
-      "distrito": "Parque do Carmo",
-      "mencoes_atracao": 13,
-      "mencoes_totais": 14
-    },
-    {
-      "distrito": "Barra Funda",
+      "distrito": "Aricanduva",
       "mencoes_atracao": 8,
-      "mencoes_totais": 21
+      "mencoes_totais": 15
     },
     {
-      "distrito": "Alto de Pinheiros",
+      "distrito": "Pinheiros",
       "mencoes_atracao": 7,
-      "mencoes_totais": 10
-    },
-    {
-      "distrito": "Morumbi",
-      "mencoes_atracao": 7,
-      "mencoes_totais": 26
-    },
-    {
-      "distrito": "Bom Retiro",
-      "mencoes_atracao": 6,
       "mencoes_totais": 14
+    },
+    {
+      "distrito": "Bela Vista",
+      "mencoes_atracao": 5,
+      "mencoes_totais": 13
     },
     {
       "distrito": "Santo Amaro",
-      "mencoes_atracao": 6,
-      "mencoes_totais": 9
+      "mencoes_atracao": 5,
+      "mencoes_totais": 13
+    },
+    {
+      "distrito": "Bom Retiro",
+      "mencoes_atracao": 4,
+      "mencoes_totais": 12
+    },
+    {
+      "distrito": "Parque do Carmo",
+      "mencoes_atracao": 4,
+      "mencoes_totais": 6
+    },
+    {
+      "distrito": "Alto de Pinheiros",
+      "mencoes_atracao": 3,
+      "mencoes_totais": 17
+    },
+    {
+      "distrito": "Cidade Tiradentes",
+      "mencoes_atracao": 3,
+      "mencoes_totais": 4
     },
     {
       "distrito": "Itaim Bibi",
-      "mencoes_atracao": 4,
-      "mencoes_totais": 26
-    },
-    {
-      "distrito": "Itaquera",
-      "mencoes_atracao": 4,
-      "mencoes_totais": 10
-    },
-    {
-      "distrito": "Brás",
       "mencoes_atracao": 3,
-      "mencoes_totais": 42
+      "mencoes_totais": 13
     },
     {
-      "distrito": "Casa Verde",
+      "distrito": "Morumbi",
       "mencoes_atracao": 3,
-      "mencoes_totais": 9
+      "mencoes_totais": 20
     }
   ]
 }
