@@ -232,5 +232,14 @@
     "categoria": null,
     "vies_estrutural": "investidor_aluguel",
     "bairro_alvo": "Itaim Bibi | destaque_titulo: não identificado"
+  },
+  {
+    "tema": "reajuste de aluguel comercial como indicador de valorização",
+    "vies": "o reajuste extremo de um contrato comercial de longo prazo revela, pelo mecanismo de vacância e demanda locacional, o mesmo motor que sustenta a valorização residencial em bairros de baixa vacância como Pinheiros",
+    "pilar": "investimento",
+    "data": "2026-08-10",
+    "categoria": null,
+    "vies_estrutural": "investidor_valorizacao",
+    "bairro_alvo": "Pinheiros | destaque_titulo: não identificado"
   }
 ]
