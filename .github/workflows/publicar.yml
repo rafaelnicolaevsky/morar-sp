@@ -49,6 +49,14 @@ permissions:
 
 jobs:
   publicar:
+    # PAUSADO em 05/08/2026 (pedido do usuário, "por tempo indeterminado").
+    # gh workflow disable NÃO bloqueia workflow_dispatch vindo da API (achado
+    # real, 11/08/2026 -- o Apps Script continuou disparando e publicando
+    # normal por 6 dias apesar do status "disabled_manually"). Esse if:false
+    # é o gate que realmente impede qualquer execução, não importa quem
+    # dispare. Pra retomar: apagar esta linha (e reativar o workflow com
+    # gh workflow enable publicar, se estiver desabilitado).
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
